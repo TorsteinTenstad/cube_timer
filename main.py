@@ -19,7 +19,11 @@ class Dataset:
                 self.set_session_status(row['c2'], row['c1'])
             else:
                 for session_name, session in self.active_sessions.items():
-                    session.add_data_point(row.to_frame())
+                    session.add_data_point(row.to_frame().transpose())
+
+        for session_dir in self.sessions.values():
+            for session in session_dir.values():
+                session.print_session()
 
     def add_data_point(self, time_s):
         new_df = self.append_line_to_data_file(int(time_s * 1000), datetime.now().strftime(
@@ -53,12 +57,15 @@ class Session:
 
     def __init__(self, name):
         self.name = name
-        self.df = []
+        self.df = pd.DataFrame()
         return
 
     def add_data_point(self, data_point):
-        self.df.append(data_point)
-        return
+        self.df = self.df.append(data_point, ignore_index=True)
+
+    def print_session(self):
+        print('\n',self.name)
+        print(self.df)
 
 
 class Timer:
@@ -87,7 +94,12 @@ class Timer:
         keyboard.wait(self.trigger_key, suppress=True, trigger_on_release=True)
 
 
-main_data_set = Dataset('testfile.txt')
-timer = Timer('space', main_data_set.add_data_point)
-while True:
-    timer.record_time()
+def main():
+    main_data_set = Dataset('testfile.txt')
+    timer = Timer('space', main_data_set.add_data_point)
+    while True:
+        timer.record_time()
+
+
+if __name__ == "__main__":
+    main()
