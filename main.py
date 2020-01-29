@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from datetime import date
 import pandas as pd
+import numpy as np
 
 
 class Dataset:
@@ -20,10 +21,10 @@ class Dataset:
             else:
                 for session_name, session in self.active_sessions.items():
                     session.add_data_point(row.to_frame().transpose())
-
-        for session_dir in self.sessions.values():
-            for session in session_dir.values():
-                session.print_session()
+        #
+        # for session_dir in self.sessions.values():
+        #     for session in session_dir.values():
+        #         session.print_session()
 
     def add_data_point(self, time_s):
         new_df = self.append_line_to_data_file(int(time_s * 1000), datetime.now().strftime(
@@ -49,7 +50,7 @@ class Dataset:
 
     def append_line_to_data_file(self, c0, c1, c2):
         new_df = pd.DataFrame({'c0': [c0], 'c1': [c1], 'c2': [c2]})
-        new_df.to_csv(self.data_file, mode='a', header=False, index=False)
+        new_df.to_csv(self.data_file, mode='a', header=False, index=False, sep=';')
         return new_df
 
 
@@ -67,12 +68,34 @@ class Session:
         print('\n',self.name)
         print(self.df)
 
+    def compute_means(self, sample_len):
+        times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+        means = np.zeros(times.size)
+        for i in range(sample_len):
+            means = np.add(means, np.roll(times, i))
+        means /= len
+        means[0:sample_len-1] = -np.ones(sample_len-1)
+        print(means)
+        return means
+
+    def compute_averages(self, sample_len, discard_amount):
+        times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+        averages = -np.ones(times.size)
+        for i in range(sample_len, times.size+1):
+            sample = times[i-sample_len: i]
+            for j in range(discard_amount):
+                sample = np.delete(sample, sample.argmin())
+                sample = np.delete(sample, sample.argmax())
+            averages[i-1] = np.average(sample)
+        return averages.astype(dtype=np.dtype(np.int64))
+
 
 class Timer:
 
-    def __init__(self, trigger_key, send_time_func):
+    def __init__(self, send_time_func, trigger_key='space', min_hold_time=1):
         self.trigger_key = trigger_key
         self.send_time_func = send_time_func
+        self.min_hold_time = min_hold_time
 
     def record_time(self):
         ready = False
@@ -80,7 +103,7 @@ class Timer:
             keyboard.wait(self.trigger_key, suppress=True, trigger_on_release=False)
             initial_t = time.time()
             while True:
-                if time.time() - initial_t > 1:
+                if time.time() - initial_t > self.min_hold_time:
                     print('Ready')
                     ready = True
                     break
@@ -96,9 +119,8 @@ class Timer:
 
 def main():
     main_data_set = Dataset('testfile.txt')
-    timer = Timer('space', main_data_set.add_data_point)
-    while True:
-        timer.record_time()
+    timer = Timer(main_data_set.add_data_point)
+    print(main_data_set.active_sessions['global'].compute_averages(5, 2))
 
 
 if __name__ == "__main__":
