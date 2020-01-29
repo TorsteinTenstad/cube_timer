@@ -73,10 +73,11 @@ class Session:
         means = np.zeros(times.size)
         for i in range(sample_len):
             means = np.add(means, np.roll(times, i))
-        means /= len
+        means /= sample_len
         means[0:sample_len-1] = -np.ones(sample_len-1)
-        print(means)
-        return means
+        means_df = self.df.copy()
+        means_df.iloc[:, 0] = means.astype(dtype=np.dtype(np.int64))
+        return means_df
 
     def compute_averages(self, sample_len, discard_amount):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
@@ -87,7 +88,27 @@ class Session:
                 sample = np.delete(sample, sample.argmin())
                 sample = np.delete(sample, sample.argmax())
             averages[i-1] = np.average(sample)
-        return averages.astype(dtype=np.dtype(np.int64))
+        averages_df = self.df.copy()
+        averages_df.iloc[:, 0] = averages.astype(dtype=np.dtype(np.int64))
+        return averages_df
+
+    def compute_sample_mean(self):
+        return int(np.average(self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))))
+
+    def compute_average(self):
+        return self.compute_averages(self.df.size, int(0.1*self.df.size)).iloc[-1, 0]
+
+    def compute_sample_variance(self):
+        sample_mean = self.compute_sample_mean()
+        times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+        sum_of_squares = 0
+        for i in range(times.size):
+            sum_of_squares += np.power(times[i]-sample_mean, 2)
+        return sum_of_squares/(times.size-1)
+
+    def compute_confidence_interval_global_mean(self):
+        sample_mean = self.compute_sample_mean()
+        sample_variance = self.compute_sample_variance()
 
 
 class Timer:
@@ -120,7 +141,7 @@ class Timer:
 def main():
     main_data_set = Dataset('testfile.txt')
     timer = Timer(main_data_set.add_data_point)
-    print(main_data_set.active_sessions['global'].compute_averages(5, 2))
+    print(np.sqrt(main_data_set.active_sessions['global'].compute_sample_variance()))
 
 
 if __name__ == "__main__":
