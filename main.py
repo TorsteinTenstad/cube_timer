@@ -28,9 +28,9 @@ class Dataset:
             session.add_data_point(new_df)
 
     def set_session_status(self, session_name, new_status):
-        for status, session_dict in self.sessions:
+        for status, session_dict in self.sessions.items():
             if status != new_status:
-                session_to_move = self.sessions[status].pop(session_name)
+                session_to_move = self.sessions[status].pop(session_name, None)
                 if session_to_move:
                     self.sessions[new_status].update({session_name: session_to_move})
                     return session_to_move
