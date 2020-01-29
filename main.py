@@ -11,37 +11,42 @@ class Dataset:
         self.active_sessions = {}
         self.paused_sessions = {}
         self.stopped_sessions = {}
-        
+        self.sessions = {'start': self.active_sessions, 'pause': self.paused_sessions, 'end': self.stopped_sessions}
+
         df = pd.read_csv(self.data_file, sep=';')
         for index, row in df.iterrows():
             if row['c0'] == '---Session':
-                action = row['c1']
-                session_name = row['c2']
-                if action == 'start':
-                    new_session = Session(row['c2'])
-                    self.active_sessions.update({session_name: new_session})
-                elif action == 'pause':
-                    self.paused_sessions.update({session_name: self.active_sessions.pop(session_name)})
-                elif action == 'unpause':
-                    self.active_sessions.update({session_name: self.paused_sessions.pop(session_name)})
-                elif action == 'stop':
-                    session_to_move = self.active_sessions.pop(session_name)
-                    if not session_to_move:
-                        session_to_move = self.paused_sessions.pop(session_name)
-                    self.stopped_sessions.update({session_name: session_to_move})
-                elif action == 'reopen':
-                    self.active_sessions.update({session_name: self.stopped_sessions.pop(session_name)})
+                self.set_session_status(row['c2'], row['c1'])
             else:
                 for session_name, session in self.active_sessions.items():
                     session.add_data_point(row.to_frame())
 
     def add_data_point(self, time_s):
-        new_df = pd.DataFrame({'c0': [int(time_s * 1000)], 'c1': [datetime.now().strftime(
-            "%H:%M:%S")], 'c2': [date.today().strftime("%d/%m/%Y")]})
-        print(new_df)
-        new_df.to_csv(self.data_file, mode='a', header=False, index=False)
+        new_df = self.append_line_to_data_file(int(time_s * 1000), datetime.now().strftime(
+            "%H:%M:%S"), date.today().strftime("%d/%m/%Y"))
         for session_name, session in self.active_sessions.items():
             session.add_data_point(new_df)
+
+    def set_session_status(self, session_name, new_status):
+        for status, session_dict in self.sessions:
+            if status != new_status:
+                session_to_move = self.sessions[status].pop(session_name)
+                if session_to_move:
+                    self.sessions[new_status].update({session_name: session_to_move})
+                    return session_to_move
+        if new_status == 'start':
+            new_session = Session(session_name)
+            self.active_sessions.update({session_name: new_session})
+            return new_session
+
+    def log_session_action(self, session_name, new_status):
+        if self.set_session_status(session_name, new_status):
+            self.append_line_to_data_file('---Session', new_status, session_name)
+
+    def append_line_to_data_file(self, c0, c1, c2):
+        new_df = pd.DataFrame({'c0': [c0], 'c1': [c1], 'c2': [c2]})
+        new_df.to_csv(self.data_file, mode='a', header=False, index=False)
+        return new_df
 
 
 class Session:
