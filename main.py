@@ -4,6 +4,7 @@ from datetime import datetime
 from datetime import date
 import pandas as pd
 import numpy as np
+from scipy.special import stdtrit
 import random
 
 
@@ -130,6 +131,8 @@ class Session:
     def compute_confidence_interval_global_mean(self):
         sample_mean = self.compute_sample_mean()
         sample_variance = self.compute_sample_variance()
+        radius = int(stdtrit(self.df.size-1, 1-0.025)*np.sqrt(sample_variance/self.df.size))
+        return [sample_mean - radius, sample_mean + radius]
 
 
 class Timer:
@@ -167,11 +170,8 @@ def main():
     main_data_set = Dataset('testfile.txt')
     scrambler = Scrambler(20)
     timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
-    while True:
-        timer.record_time()
-        main_data_set.log_session_action('s1','start')
-    #print(np.sqrt(main_data_set.active_sessions['global'].compute_sample_variance()))
-
+    print(main_data_set.active_sessions['global'].compute_confidence_interval_global_mean())
+    print(main_data_set.active_sessions['global'].compute_sample_mean())
 
 if __name__ == "__main__":
     main()
