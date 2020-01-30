@@ -24,7 +24,7 @@ class Scrambler:
         scramble_str = ''
         for i in range(self.scramble_len):
             scramble_str += self.moves[scramble[i]] + ' '
-        print(scramble_str)
+        return scramble_str
 
 
 class Dataset:
@@ -47,9 +47,9 @@ class Dataset:
         #     for session in session_dir.values():
         #         session.print_session()
 
-    def add_data_point(self, time_s):
+    def add_data_point(self, time_s, scramble):
         new_df = self.append_line_to_data_file(int(time_s * 1000), datetime.now().strftime(
-            "%H:%M:%S"), date.today().strftime("%d/%m/%Y"))
+            "%H:%M:%S"), date.today().strftime("%d/%m/%Y"), scramble)
         for session_name, session in self.active_sessions.items():
             session.add_data_point(new_df)
 
@@ -67,10 +67,10 @@ class Dataset:
 
     def log_session_action(self, session_name, new_status):
         if self.set_session_status(session_name, new_status):
-            self.append_line_to_data_file('---Session', new_status, session_name)
+            self.append_line_to_data_file('---Session', new_status, session_name, '')
 
-    def append_line_to_data_file(self, c0, c1, c2):
-        new_df = pd.DataFrame({'c0': [c0], 'c1': [c1], 'c2': [c2]})
+    def append_line_to_data_file(self, c0, c1, c2, c3):
+        new_df = pd.DataFrame({'c0': [c0], 'c1': [c1], 'c2': [c2], 'c3': [c3]})
         new_df.to_csv(self.data_file, mode='a', header=False, index=False, sep=';')
         return new_df
 
@@ -134,12 +134,15 @@ class Session:
 
 class Timer:
 
-    def __init__(self, send_time_func, trigger_key='space', min_hold_time=1):
-        self.trigger_key = trigger_key
+    def __init__(self, send_time_func, scramble_func, trigger_key='space', min_hold_time=1):
         self.send_time_func = send_time_func
+        self.scramble_func = scramble_func
+        self.trigger_key = trigger_key
         self.min_hold_time = min_hold_time
 
     def record_time(self):
+        scramble = self.scramble_func()
+        print(scramble)
         ready = False
         while not ready:
             keyboard.wait(self.trigger_key, suppress=True, trigger_on_release=False)
@@ -155,17 +158,19 @@ class Timer:
         keyboard.wait(self.trigger_key, suppress=True, trigger_on_release=True)
         t = time.time()
         keyboard.wait(self.trigger_key)
-        self.send_time_func(time.time() - t)
+        self.send_time_func(time.time() - t, scramble)
         keyboard.wait(self.trigger_key, suppress=True, trigger_on_release=True)
 
 
 def main():
     random.seed(time.time())
     main_data_set = Dataset('testfile.txt')
-    timer = Timer(main_data_set.add_data_point)
+    scrambler = Scrambler(20)
+    timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
+    while True:
+        timer.record_time()
+        main_data_set.log_session_action('s1','start')
     #print(np.sqrt(main_data_set.active_sessions['global'].compute_sample_variance()))
-    scrambler = Scrambler(10)
-    scrambler.generate_scramble()
 
 
 if __name__ == "__main__":
