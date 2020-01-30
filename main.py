@@ -4,6 +4,27 @@ from datetime import datetime
 from datetime import date
 import pandas as pd
 import numpy as np
+import random
+
+
+class Scrambler:
+
+    moves = ['F', 'R', 'U', 'B', 'L', 'D', 'F2', 'R2', 'U2', 'B2', 'L2', 'D2', 'F\'', 'R\'', 'U\'', 'B\'', 'L\'', 'D\'', ]
+
+    def __init__(self, scramble_len):
+        self.scramble_len = scramble_len
+
+    def generate_scramble(self):
+        scramble = np.zeros(self.scramble_len, dtype=np.dtype(np.int8))
+        scramble[0] = random.randint(0, 5)
+        for i in range(1, self.scramble_len):
+            x = random.randint(0, 4)
+            scramble[i] = 5 if (scramble[i-1] == x) else x
+        scramble += 6*np.random.randint(0,3,self.scramble_len)
+        scramble_str = ''
+        for i in range(self.scramble_len):
+            scramble_str += self.moves[scramble[i]] + ' '
+        print(scramble_str)
 
 
 class Dataset:
@@ -139,9 +160,12 @@ class Timer:
 
 
 def main():
+    random.seed(time.time())
     main_data_set = Dataset('testfile.txt')
     timer = Timer(main_data_set.add_data_point)
-    print(np.sqrt(main_data_set.active_sessions['global'].compute_sample_variance()))
+    #print(np.sqrt(main_data_set.active_sessions['global'].compute_sample_variance()))
+    scrambler = Scrambler(10)
+    scrambler.generate_scramble()
 
 
 if __name__ == "__main__":
