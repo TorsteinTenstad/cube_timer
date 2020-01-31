@@ -8,9 +8,19 @@ from scipy.special import stdtrit
 import random
 
 
+def scramble_checker(scramble):
+    opposite_axis = [3, 4, 5, 0, 1, 2]
+    error_count = 0
+    for i in range(len(scramble)-2):
+        if scramble[i] == scramble[i+1] or (scramble[i] == scramble[i+2] and scramble[i] == opposite_axis[scramble[i+1]]):
+            error_count += 1
+    return error_count
+
+
 class Scrambler:
 
     moves = ['F', 'R', 'U', 'B', 'L', 'D', 'F2', 'R2', 'U2', 'B2', 'L2', 'D2', 'F\'', 'R\'', 'U\'', 'B\'', 'L\'', 'D\'', ]
+    opposite_axis = [3, 4, 5, 0, 1, 2]
 
     def __init__(self, scramble_len):
         self.scramble_len = scramble_len
@@ -21,7 +31,10 @@ class Scrambler:
         for i in range(1, self.scramble_len):
             x = random.randint(0, 4)
             scramble[i] = 5 if (scramble[i-1] == x) else x
-        scramble += 6*np.random.randint(0,3,self.scramble_len)
+            if i > 2 and scramble[i] == scramble[i-2] and self.opposite_axis[scramble[i]] == scramble[i-1]:
+                new_x = random.randint(0, 3)
+                scramble[i] = 4 if (new_x == scramble[i-1]) else 5 if (new_x == scramble[i-2]) else new_x
+        scramble += 6*np.random.randint(0, 3, self.scramble_len)
         scramble_str = ''
         for i in range(self.scramble_len):
             scramble_str += self.moves[scramble[i]] + ' '
@@ -123,10 +136,7 @@ class Session:
     def compute_sample_variance(self):
         sample_mean = self.compute_sample_mean()
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
-        sum_of_squares = 0
-        for i in range(times.size):
-            sum_of_squares += np.power(times[i]-sample_mean, 2)
-        return sum_of_squares/(times.size-1)
+        return int(np.sum(np.square(times-sample_mean))/times.size)
 
     def compute_confidence_interval_global_mean(self):
         sample_mean = self.compute_sample_mean()
@@ -167,11 +177,10 @@ class Timer:
 
 def main():
     random.seed(time.time())
-    main_data_set = Dataset('testfile.txt')
-    scrambler = Scrambler(20)
-    timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
-    print(main_data_set.active_sessions['global'].compute_confidence_interval_global_mean())
-    print(main_data_set.active_sessions['global'].compute_sample_mean())
+    #main_data_set = Dataset('testfile.txt')
+    scrambler = Scrambler(100)
+    #timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
+    scramble = scrambler.generate_scramble()
 
 if __name__ == "__main__":
     main()
