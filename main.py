@@ -44,6 +44,7 @@ class Scrambler:
 class Dataset:
     def __init__(self, data_file):
         self.data_file = data_file
+        self.all_sessions = {}
         self.active_sessions = {}
         self.paused_sessions = {}
         self.stopped_sessions = {}
@@ -76,12 +77,19 @@ class Dataset:
                     return session_to_move
         if new_status == 'start':
             new_session = Session(session_name)
+            self.all_sessions.update({session_name: new_session})
             self.active_sessions.update({session_name: new_session})
             return new_session
 
     def log_session_action(self, session_name, new_status):
         if self.set_session_status(session_name, new_status):
             self.append_line_to_data_file('---Session', new_status, session_name, '')
+
+    def get_pbs(self):
+        pbs = pd.DataFrame()
+        for name, session in self.all_sessions.items():
+            pbs = pbs.append(session.get_best_average(5, 1), ignore_index=True)
+        return pbs
 
     def append_line_to_data_file(self, c0, c1, c2, c3):
         new_df = pd.DataFrame({'c0': [c0], 'c1': [c1], 'c2': [c2], 'c3': [c3]})
@@ -100,7 +108,7 @@ class Session:
         self.df = self.df.append(data_point, ignore_index=True)
 
     def print_session(self):
-        print('\n',self.name)
+        print('\n', self.name)
         print(self.df)
 
     def compute_means(self, sample_len):
@@ -109,23 +117,29 @@ class Session:
         for i in range(sample_len):
             means = np.add(means, np.roll(times, i))
         means /= sample_len
-        means[0:sample_len-1] = -np.ones(sample_len-1)
+        means[0:sample_len-1] = np.NaN
         means_df = self.df.copy()
         means_df.iloc[:, 0] = means.astype(dtype=np.dtype(np.int64))
         return means_df
 
     def compute_averages(self, sample_len, discard_amount):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
-        averages = -np.ones(times.size)
+        averages = np.ones(times.size)
         for i in range(sample_len, times.size+1):
             sample = times[i-sample_len: i]
             for j in range(discard_amount):
                 sample = np.delete(sample, sample.argmin())
                 sample = np.delete(sample, sample.argmax())
             averages[i-1] = np.average(sample)
+        averages[0:sample_len-1] = np.NaN
         averages_df = self.df.copy()
         averages_df.iloc[:, 0] = averages.astype(dtype=np.dtype(np.int64))
         return averages_df
+
+    def get_best_average(self, sample_len, discard_amount):
+        row = self.compute_averages(sample_len, discard_amount).iloc[sample_len-1:, :].sort_values(by=['c0'])
+        row.iloc[:, 3] = self.name
+        return row.iloc[0, :]
 
     def compute_sample_mean(self):
         return int(np.average(self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))))
@@ -177,10 +191,12 @@ class Timer:
 
 def main():
     random.seed(time.time())
-    #main_data_set = Dataset('testfile.txt')
-    scrambler = Scrambler(100)
-    #timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
-    scramble = scrambler.generate_scramble()
+    main_data_set = Dataset('testfile.txt')
+    scrambler = Scrambler(20)
+    timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
+    print(main_data_set.get_pbs())
+    # while True:
+    #     timer.record_time()
 
 if __name__ == "__main__":
     main()
