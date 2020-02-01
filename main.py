@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from scipy.special import stdtrit
 import random
+import matplotlib.pyplot as plt
 
 
 def scramble_checker(scramble):
@@ -90,6 +91,20 @@ class Dataset:
         for name, session in self.all_sessions.items():
             pbs = pbs.append(session.get_best_average(5, 1), ignore_index=True)
         return pbs
+
+    def plot_pbs(self):
+        pbs = self.get_pbs()
+        times = pbs.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+        print(times)
+        dates = pbs.iloc[:, 2].to_list()
+        print(dates)
+        fig, ax = plt.subplots()
+        #plt.axis([0, 1, 0, 0.1])
+        ax.plot(dates, times)
+        plt.xlabel('\u03B8/\u03C0')
+        plt.ylabel('Maximum observed relative error')
+        plt.show()
+
 
     def append_line_to_data_file(self, c0, c1, c2, c3):
         new_df = pd.DataFrame({'c0': [c0], 'c1': [c1], 'c2': [c2], 'c3': [c3]})
@@ -194,7 +209,7 @@ def main():
     main_data_set = Dataset('testfile.txt')
     scrambler = Scrambler(20)
     timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
-    print(main_data_set.get_pbs())
+    main_data_set.plot_pbs()
     # while True:
     #     timer.record_time()
 
