@@ -7,6 +7,7 @@ import numpy as np
 from scipy.special import stdtrit
 import random
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 
 def scramble_checker(scramble):
@@ -43,6 +44,12 @@ class Scrambler:
 
 
 class Dataset:
+
+    measures_of_interest = {'Single': [1, 0],
+                            'Average of 5': [5, 1],
+                            'Average of 12': [12, 1],
+                            'Average of 100': [100, 10]}
+
     def __init__(self, data_file):
         self.data_file = data_file
         self.all_sessions = {}
@@ -57,6 +64,7 @@ class Dataset:
                 self.set_session_status(row['c2'], row['c1'])
             else:
                 for session_name, session in self.active_sessions.items():
+                    row['c2'] = pd.to_datetime(row['c2'], format="%d/%m/%Y")
                     session.add_data_point(row.to_frame().transpose())
         #
         # for session_dir in self.sessions.values():
@@ -87,24 +95,35 @@ class Dataset:
             self.append_line_to_data_file('---Session', new_status, session_name, '')
 
     def get_pbs(self):
-        pbs = pd.DataFrame()
-        for name, session in self.all_sessions.items():
-            pbs = pbs.append(session.get_best_average(5, 1), ignore_index=True)
+        pbs = {}
+        for key, value in self.measures_of_interest.items():
+            df = pd.DataFrame()
+            for name, session in self.all_sessions.items():
+                df = df.append(session.get_best_average(self.measures_of_interest[key][0], self.measures_of_interest[key][1]), ignore_index=True)
+            df.sort_values(by=['c2'], inplace=True, ascending=True)
+            times = df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+            print(times)
+            for i in range(1, times.size):
+                times[i] = min(times[i], times[i-1])
+            df.iloc[:, 0] = times
+            pbs.update({key: df})
         return pbs
 
     def plot_pbs(self):
         pbs = self.get_pbs()
-        times = pbs.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
-        print(times)
-        dates = pbs.iloc[:, 2].to_list()
-        print(dates)
         fig, ax = plt.subplots()
-        #plt.axis([0, 1, 0, 0.1])
-        ax.plot(dates, times)
-        plt.xlabel('\u03B8/\u03C0')
-        plt.ylabel('Maximum observed relative error')
+        for key, value in pbs.items():
+            times = value.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+            dates = value.iloc[:, 2].to_list()
+            ax.plot(dates, times, label=key)
+        fig.set_size_inches(8, 5)
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%y"))
+        fig.set_dpi(300)
+        plt.ylabel('Milliseconds')
+        plt.legend(loc='best')
+        plt.title('PBs')
+        plt.grid()
         plt.show()
-
 
     def append_line_to_data_file(self, c0, c1, c2, c3):
         new_df = pd.DataFrame({'c0': [c0], 'c1': [c1], 'c2': [c2], 'c3': [c3]})
@@ -206,7 +225,7 @@ class Timer:
 
 def main():
     random.seed(time.time())
-    main_data_set = Dataset('testfile.txt')
+    main_data_set = Dataset('old_times.txt')
     scrambler = Scrambler(20)
     timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
     main_data_set.plot_pbs()
