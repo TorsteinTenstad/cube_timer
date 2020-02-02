@@ -99,7 +99,9 @@ class Dataset:
         for key, value in self.measures_of_interest.items():
             df = pd.DataFrame()
             for name, session in self.all_sessions.items():
-                df = df.append(session.get_best_average(self.measures_of_interest[key][0], self.measures_of_interest[key][1]), ignore_index=True)
+                best_average = session.get_best_average(self.measures_of_interest[key][0], self.measures_of_interest[key][1])
+                if best_average is not None:
+                    df = df.append(best_average, ignore_index=True)
             df.sort_values(by=['c2'], inplace=True, ascending=True)
             times = df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
             print(times)
@@ -158,6 +160,8 @@ class Session:
 
     def compute_averages(self, sample_len, discard_amount):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+        if sample_len > times.size:
+            return
         averages = np.ones(times.size)
         for i in range(sample_len, times.size+1):
             sample = times[i-sample_len: i]
@@ -171,7 +175,10 @@ class Session:
         return averages_df
 
     def get_best_average(self, sample_len, discard_amount):
-        row = self.compute_averages(sample_len, discard_amount).iloc[sample_len-1:, :].sort_values(by=['c0'])
+        row = self.compute_averages(sample_len, discard_amount)
+        if row is None:
+            return
+        row = row.iloc[sample_len-1:, :].sort_values(by=['c0'])
         row.iloc[:, 3] = self.name
         return row.iloc[0, :]
 
