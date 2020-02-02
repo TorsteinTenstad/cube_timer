@@ -45,10 +45,10 @@ class Scrambler:
 
 class Dataset:
 
-    measures_of_interest = {'Single': [1, 0],
-                            'Average of 5': [5, 1],
-                            'Average of 12': [12, 1],
-                            'Average of 100': [100, 10]}
+    measures_of_interest = {'Single': [1, 0, 'C2'],
+                            'Average of 5': [5, 1, 'C1'],
+                            'Average of 12': [12, 1, 'C0'],
+                            'Average of 100': [100, 10, 'C3']}
 
     def __init__(self, data_file):
         self.data_file = data_file
@@ -100,11 +100,9 @@ class Dataset:
             df = pd.DataFrame()
             for name, session in self.all_sessions.items():
                 best_average = session.get_best_average(self.measures_of_interest[key][0], self.measures_of_interest[key][1])
-                if best_average is not None:
-                    df = df.append(best_average, ignore_index=True)
+                df = df.append(best_average, ignore_index=True)
             df.sort_values(by=['c2'], inplace=True, ascending=True)
-            times = df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
-            print(times)
+            times = df.iloc[:, 0].to_numpy()
             for i in range(1, times.size):
                 times[i] = min(times[i], times[i-1])
             df.iloc[:, 0] = times
@@ -115,9 +113,13 @@ class Dataset:
         pbs = self.get_pbs()
         fig, ax = plt.subplots()
         for key, value in pbs.items():
-            times = value.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+            times = value.iloc[:, 0].to_numpy()
             dates = value.iloc[:, 2].to_list()
-            ax.plot(dates, times, label=key)
+            ax.plot(dates, times, color=self.measures_of_interest[key][2], marker='o')
+            for i in range(1, times.size):
+                times[i] = times[i] if not np.isnan(times[i]) else times[i-1]
+            ax.plot(dates, times, color=self.measures_of_interest[key][2], linestyle='-', label=key)
+
         fig.set_size_inches(8, 5)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%y"))
         fig.set_dpi(300)
@@ -149,6 +151,8 @@ class Session:
 
     def compute_means(self, sample_len):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+        if sample_len > times.size:
+            return pd.DataFrame({'c0': np.NaN*np.ones(sample_len), 'c1': np.NaN*np.ones(sample_len), 'c2': self.df.iat[0, 2], 'c3': np.NaN*np.ones(sample_len)})
         means = np.zeros(times.size)
         for i in range(sample_len):
             means = np.add(means, np.roll(times, i))
@@ -161,7 +165,7 @@ class Session:
     def compute_averages(self, sample_len, discard_amount):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
         if sample_len > times.size:
-            return
+            return pd.DataFrame({'c0': np.NaN*np.ones(sample_len), 'c1': np.NaN*np.ones(sample_len), 'c2': self.df.iat[0, 2], 'c3': np.NaN*np.ones(sample_len)})
         averages = np.ones(times.size)
         for i in range(sample_len, times.size+1):
             sample = times[i-sample_len: i]
@@ -176,8 +180,6 @@ class Session:
 
     def get_best_average(self, sample_len, discard_amount):
         row = self.compute_averages(sample_len, discard_amount)
-        if row is None:
-            return
         row = row.iloc[sample_len-1:, :].sort_values(by=['c0'])
         row.iloc[:, 3] = self.name
         return row.iloc[0, :]
