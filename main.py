@@ -14,8 +14,14 @@ def scramble_checker(scramble):
     opposite_axis = [3, 4, 5, 0, 1, 2]
     error_count = 0
     for i in range(len(scramble)-2):
-        if scramble[i] == scramble[i+1] or (scramble[i] == scramble[i+2] and scramble[i] == opposite_axis[scramble[i+1]]):
+        if scramble[i] == scramble[i+1]:
+            print('err1', scramble[i])
             error_count += 1
+        if scramble[i] == scramble[i+2] and scramble[i] == opposite_axis[scramble[i+1]]:
+            error_count += 1
+            print('err2', scramble[i])
+    if error_count > 0:
+        print(scramble)
     return error_count
 
 
@@ -33,9 +39,13 @@ class Scrambler:
         for i in range(1, self.scramble_len):
             x = random.randint(0, 4)
             scramble[i] = 5 if (scramble[i-1] == x) else x
-            if i > 2 and scramble[i] == scramble[i-2] and self.opposite_axis[scramble[i]] == scramble[i-1]:
+            if i >= 2 and scramble[i] == scramble[i-2] and self.opposite_axis[scramble[i]] == scramble[i-1]:
                 new_x = random.randint(0, 3)
-                scramble[i] = 4 if (new_x == scramble[i-1]) else 5 if (new_x == scramble[i-2]) else new_x
+                if new_x == scramble[i-1]:
+                    new_x = 5 if scramble[i-2] != 5 else 4
+                elif new_x == scramble[i-2]:
+                    new_x = 5 if scramble[i-1] != 5 else 4
+                scramble[i] = new_x
         scramble += 6*np.random.randint(0, 3, self.scramble_len)
         scramble_str = ''
         for i in range(self.scramble_len):
@@ -228,18 +238,20 @@ class Timer:
         keyboard.wait(self.trigger_key, suppress=True, trigger_on_release=True)
         t = time.time()
         keyboard.wait(self.trigger_key)
-        self.send_time_func(time.time() - t, scramble)
+        recorded_time = time.time() - t
+        self.send_time_func(recorded_time, scramble)
+        print('Time:', recorded_time)
         keyboard.wait(self.trigger_key, suppress=True, trigger_on_release=True)
 
 
 def main():
     random.seed(time.time())
-    main_data_set = Dataset('old_times.txt')
     scrambler = Scrambler(20)
+    main_data_set = Dataset('old_times.txt')
     timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
     main_data_set.plot_pbs()
-    # while True:
-    #     timer.record_time()
+    while True:
+        timer.record_time()
 
 if __name__ == "__main__":
     main()
