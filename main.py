@@ -63,6 +63,7 @@ class Dataset:
     def __init__(self, data_file):
         self.data_file = data_file
         self.all_sessions = {}
+        self.sessions_counting_towards_pbs = {}
         self.active_sessions = {}
         self.paused_sessions = {}
         self.stopped_sessions = {}
@@ -71,7 +72,7 @@ class Dataset:
         df = pd.read_csv(self.data_file, sep=';')
         for index, row in df.iterrows():
             if row['c0'] == '---Session':
-                self.set_session_status(row['c2'], row['c1'])
+                self.set_session_status(row['c2'], row['c1'], row['c3'] == 'True')
             else:
                 for session_name, session in self.active_sessions.items():
                     row['c2'] = pd.to_datetime(row['c2'], format="%d/%m/%Y")
@@ -87,7 +88,7 @@ class Dataset:
         for session_name, session in self.active_sessions.items():
             session.add_data_point(new_df)
 
-    def set_session_status(self, session_name, new_status):
+    def set_session_status(self, session_name, new_status, counting_towards_pbs):
         for status, session_dict in self.sessions.items():
             if status != new_status:
                 session_to_move = self.sessions[status].pop(session_name, None)
@@ -96,19 +97,21 @@ class Dataset:
                     return session_to_move
         if new_status == 'start':
             new_session = Session(session_name)
+            if counting_towards_pbs:
+                self.sessions_counting_towards_pbs.update({session_name: new_session})
             self.all_sessions.update({session_name: new_session})
             self.active_sessions.update({session_name: new_session})
             return new_session
 
-    def log_session_action(self, session_name, new_status):
-        if self.set_session_status(session_name, new_status):
-            self.append_line_to_data_file('---Session', new_status, session_name, '')
+    def log_session_action(self, session_name, new_status, counting_towards_pbs):
+        if self.set_session_status(session_name, new_status, counting_towards_pbs):
+            self.append_line_to_data_file('---Session', new_status, session_name, counting_towards_pbs)
 
     def get_pbs(self):
         pbs = {}
         for key, value in self.measures_of_interest.items():
             df = pd.DataFrame()
-            for name, session in self.all_sessions.items():
+            for name, session in self.sessions_counting_towards_pbs.items():
                 best_average = session.get_best_average(self.measures_of_interest[key][0], self.measures_of_interest[key][1])
                 df = df.append(best_average, ignore_index=True)
             df.sort_values(by=['c2'], inplace=True, ascending=True)
@@ -125,14 +128,15 @@ class Dataset:
         for key, value in pbs.items():
             times = value.iloc[:, 0].to_numpy()
             dates = value.iloc[:, 2].to_list()
-            ax.plot(dates, times, color=self.measures_of_interest[key][2], marker='o')
+            ax.plot(dates, times/1000, color=self.measures_of_interest[key][2], marker='o')
             for i in range(1, times.size):
                 times[i] = times[i] if not np.isnan(times[i]) else times[i-1]
-            ax.plot(dates, times, color=self.measures_of_interest[key][2], linestyle='-', label=key)
+            ax.plot(dates, times/1000, color=self.measures_of_interest[key][2], linestyle='-', label=key)
 
         fig.set_size_inches(8, 5)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%y"))
         fig.set_dpi(300)
+        plt.yticks(np.arange(18)+17)
         plt.ylabel('Milliseconds')
         plt.legend(loc='best')
         plt.title('PBs')
