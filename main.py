@@ -137,7 +137,7 @@ class Dataset:
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%y"))
         fig.set_dpi(300)
         plt.yticks(np.arange(18)+17)
-        plt.ylabel('Milliseconds')
+        plt.ylabel('Seconds')
         plt.legend(loc='best')
         plt.title('PBs')
         plt.grid()
@@ -218,10 +218,11 @@ class Session:
 
 class Timer:
 
-    def __init__(self, send_time_func, scramble_func, trigger_key='space', min_hold_time=1):
+    def __init__(self, send_time_func, scramble_func, trigger_key='space', quit_key='q', min_hold_time=1):
         self.send_time_func = send_time_func
         self.scramble_func = scramble_func
         self.trigger_key = trigger_key
+        self.quit_key = quit_key
         self.min_hold_time = min_hold_time
 
     def record_time(self):
@@ -247,15 +248,52 @@ class Timer:
         print('Time:', recorded_time)
         keyboard.wait(self.trigger_key, suppress=True, trigger_on_release=True)
 
+    def run(self):
+        state = 0
+        recorded_time = -1
+        new_scramble = self.scramble_func()
+        print(new_scramble)
+        while True:
+            if state == 0:
+                if keyboard.is_pressed(self.trigger_key):
+                    hold_start = time.time()
+                    state = 1
+                elif keyboard.is_pressed(self.quit_key):
+                    if recorded_time > 0:
+                        self.send_time_func(recorded_time, scramble)
+                    return
+            if state == 1:
+                if time.time() - hold_start > self.min_hold_time:
+                    print('Ready')
+                    if recorded_time > 0:
+                        self.send_time_func(recorded_time, scramble)
+                    state = 2
+                elif not keyboard.is_pressed(self.trigger_key):
+                    state = 0
+            if state == 2:
+                if not keyboard.is_pressed(self.trigger_key):
+                    start_time = time.time()
+                    state = 3
+            if state == 3:
+                if keyboard.is_pressed(self.trigger_key):
+                    recorded_time = time.time() - start_time
+                    print('Time: ', recorded_time)
+                    scramble = new_scramble
+                    new_scramble = self.scramble_func()
+                    print(new_scramble)
+                    state = 4
+            if state == 4:
+                if not keyboard.is_pressed(self.trigger_key):
+                    state = 0
+
 
 def main():
     random.seed(time.time())
     scrambler = Scrambler(20)
-    main_data_set = Dataset('old_times.txt')
+    main_data_set = Dataset('testfile.txt')
     timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
-    main_data_set.plot_pbs()
-    while True:
-        timer.record_time()
+    #main_data_set.plot_pbs()
+    timer.run()
 
 if __name__ == "__main__":
     main()
