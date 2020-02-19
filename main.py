@@ -116,9 +116,14 @@ class Dataset:
                 df = df.append(best_average, ignore_index=True)
             df.sort_values(by=['c2'], inplace=True, ascending=True)
             times = df.iloc[:, 0].to_numpy()
+            pb_time = times[0]
             for i in range(1, times.size):
-                times[i] = min(times[i], times[i-1])
+                if times[i] > pb_time:
+                    times[i] = pb_time
+                elif not np.isnan(times[i]):
+                    pb_time = times[i]
             df.iloc[:, 0] = times
+            print(key, df)
             pbs.update({key: df})
         return pbs
 
@@ -218,11 +223,13 @@ class Session:
 
 class Timer:
 
-    def __init__(self, send_time_func, scramble_func, trigger_key='space', quit_key='q', min_hold_time=1):
+    def __init__(self, send_time_func, scramble_func, trigger_key='space', quit_key='q', add_2_key='2', dnf_key='d', min_hold_time=1):
         self.send_time_func = send_time_func
         self.scramble_func = scramble_func
         self.trigger_key = trigger_key
         self.quit_key = quit_key
+        self.add_2_key = add_2_key
+        self.dnf_key = dnf_key
         self.min_hold_time = min_hold_time
 
     def record_time(self):
@@ -253,11 +260,18 @@ class Timer:
         recorded_time = -1
         new_scramble = self.scramble_func()
         print(new_scramble)
+        add_2 = False
         while True:
             if state == 0:
                 if keyboard.is_pressed(self.trigger_key):
                     hold_start = time.time()
                     state = 1
+                elif keyboard.is_pressed(self.add_2_key):
+                    add_2 = not add_2
+                    print('toggle_add_2')
+                    keyboard.wait(self.add_2_key, suppress=True, trigger_on_release=True)
+                elif keyboard.is_pressed(self.dnf_key):
+                    print('dnf')
                 elif keyboard.is_pressed(self.quit_key):
                     if recorded_time > 0:
                         self.send_time_func(recorded_time, scramble)
@@ -290,10 +304,10 @@ class Timer:
 def main():
     random.seed(time.time())
     scrambler = Scrambler(20)
-    main_data_set = Dataset('testfile.txt')
+    main_data_set = Dataset('old_times.txt')
     timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
-    #main_data_set.plot_pbs()
-    timer.run()
+    main_data_set.plot_pbs()
+    #timer.run()
 
 if __name__ == "__main__":
     main()
