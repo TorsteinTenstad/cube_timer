@@ -50,7 +50,7 @@ class Scrambler:
         scramble_str = ''
         for i in range(self.scramble_len):
             scramble_str += self.moves[scramble[i]] + ' '
-        return scramble_str
+        return scramble_str[:-1]
 
 
 class Dataset:
@@ -82,9 +82,9 @@ class Dataset:
         #     for session in session_dir.values():
         #         session.print_session()
 
-    def add_data_point(self, time_s, scramble):
+    def add_data_point(self, time_s, scramble, penalty):
         new_df = self.append_line_to_data_file(int(time_s * 1000), datetime.now().strftime(
-            "%H:%M:%S"), date.today().strftime("%d/%m/%Y"), scramble)
+            "%H:%M:%S"), date.today().strftime("%d/%m/%Y"), scramble, penalty)
         for session_name, session in self.active_sessions.items():
             session.add_data_point(new_df)
 
@@ -123,7 +123,6 @@ class Dataset:
                 elif not np.isnan(times[i]):
                     pb_time = times[i]
             df.iloc[:, 0] = times
-            print(key, df)
             pbs.update({key: df})
         return pbs
 
@@ -148,8 +147,8 @@ class Dataset:
         plt.grid()
         plt.show()
 
-    def append_line_to_data_file(self, c0, c1, c2, c3):
-        new_df = pd.DataFrame({'c0': [c0], 'c1': [c1], 'c2': [c2], 'c3': [c3]})
+    def append_line_to_data_file(self, c0, c1, c2, c3, c4):
+        new_df = pd.DataFrame({'c0': [c0], 'c1': [c1], 'c2': [c2], 'c3': [c3], 'c4': [c4]})
         new_df.to_csv(self.data_file, mode='a', header=False, index=False, sep=';')
         return new_df
 
@@ -232,82 +231,81 @@ class Timer:
         self.dnf_key = dnf_key
         self.min_hold_time = min_hold_time
 
-    def record_time(self):
-        scramble = self.scramble_func()
-        print(scramble)
-        ready = False
-        while not ready:
-            keyboard.wait(self.trigger_key, suppress=True, trigger_on_release=False)
-            initial_t = time.time()
-            while True:
-                if time.time() - initial_t > self.min_hold_time:
-                    print('Ready')
-                    ready = True
-                    break
-                elif not keyboard.is_pressed(self.trigger_key):
-                    break
+        self.state = 0
+        self.recorded_time = -1
+        self.add_2 = False
+        self.dnf = False
+        self.scramble = ''
 
-        keyboard.wait(self.trigger_key, suppress=True, trigger_on_release=True)
-        t = time.time()
-        keyboard.wait(self.trigger_key)
-        recorded_time = time.time() - t
-        self.send_time_func(recorded_time, scramble)
-        print('Time:', recorded_time)
-        keyboard.wait(self.trigger_key, suppress=True, trigger_on_release=True)
+    def register_time(self):
+        if self.recorded_time > 0:
+            penalty = ''
+            time_to_send = self.recorded_time
+            if self.dnf:
+                penalty = 'DNF'
+                time_to_send = 60
+            elif self.add_2:
+                penalty = '+2'
+                time_to_send += 2
+            self.send_time_func(time_to_send, self.scramble, penalty)
+        self.add_2 = False
+        self.dnf = False
 
     def run(self):
-        state = 0
-        recorded_time = -1
+        self.state = 0
+        self.recorded_time = -1
+        self.add_2 = False
+        self.dnf = False
         new_scramble = self.scramble_func()
         print(new_scramble)
-        add_2 = False
+
         while True:
-            if state == 0:
+            if self.state == 0:  # waiting for input
                 if keyboard.is_pressed(self.trigger_key):
                     hold_start = time.time()
-                    state = 1
+                    self.state = 1
                 elif keyboard.is_pressed(self.add_2_key):
-                    add_2 = not add_2
+                    self.add_2 = not self.add_2
                     print('toggle_add_2')
                     keyboard.wait(self.add_2_key, suppress=True, trigger_on_release=True)
                 elif keyboard.is_pressed(self.dnf_key):
-                    print('dnf')
+                    self.dnf = not self.dnf
+                    print('toggle_dnf')
+                    keyboard.wait(self.dnf_key, suppress=True, trigger_on_release=True)
                 elif keyboard.is_pressed(self.quit_key):
-                    if recorded_time > 0:
-                        self.send_time_func(recorded_time, scramble)
+                    self.register_time()
                     return
-            if state == 1:
+            if self.state == 1:  # user is holding, waiting for ready signal
                 if time.time() - hold_start > self.min_hold_time:
                     print('Ready')
-                    if recorded_time > 0:
-                        self.send_time_func(recorded_time, scramble)
-                    state = 2
+                    self.register_time()
+                    self.state = 2
                 elif not keyboard.is_pressed(self.trigger_key):
-                    state = 0
-            if state == 2:
+                    self.state = 0
+            if self.state == 2:  # timer starts
                 if not keyboard.is_pressed(self.trigger_key):
                     start_time = time.time()
-                    state = 3
-            if state == 3:
+                    self.state = 3
+            if self.state == 3:  # waiting for, and registering finish
                 if keyboard.is_pressed(self.trigger_key):
-                    recorded_time = time.time() - start_time
-                    print('Time: ', recorded_time)
-                    scramble = new_scramble
+                    self.recorded_time = time.time() - start_time
+                    print('Time: ', self.recorded_time)
+                    self.scramble = new_scramble
                     new_scramble = self.scramble_func()
                     print(new_scramble)
-                    state = 4
-            if state == 4:
+                    self.state = 4
+            if self.state == 4:  # extra state to prevent immediately starting the timer again
                 if not keyboard.is_pressed(self.trigger_key):
-                    state = 0
+                    self.state = 0
 
 
 def main():
     random.seed(time.time())
     scrambler = Scrambler(20)
-    main_data_set = Dataset('old_times.txt')
+    main_data_set = Dataset('testfile.txt')
     timer = Timer(main_data_set.add_data_point, scrambler.generate_scramble)
-    main_data_set.plot_pbs()
-    #timer.run()
+    #main_data_set.plot_pbs()
+    timer.run()
 
 if __name__ == "__main__":
     main()
