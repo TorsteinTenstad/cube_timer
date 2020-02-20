@@ -48,11 +48,11 @@ class Timer:
                     self.state = 1
                 elif keyboard.is_pressed(self.add_2_key):
                     self.add_2 = not self.add_2
-                    print('toggle_add_2')
+                    print('+2:', self.add_2)
                     keyboard.wait(self.add_2_key, suppress=True, trigger_on_release=True)
                 elif keyboard.is_pressed(self.dnf_key):
                     self.dnf = not self.dnf
-                    print('toggle_dnf')
+                    print('DNF:', self.dnf)
                     keyboard.wait(self.dnf_key, suppress=True, trigger_on_release=True)
                 elif keyboard.is_pressed(self.quit_key):
                     self.register_time()

@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from scipy.special import stdtrit
+import matplotlib.pyplot as plt
+from math import ceil
 
 
 class Session:
@@ -16,6 +18,15 @@ class Session:
     def print_session(self):
         print('\n', self.name)
         print(self.df)
+
+    def plot_histogram(self):
+        times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+        fig, ax = plt.subplots()
+        plt.hist(times/1000, bins=ceil((max(times) - min(times)) / 1000))
+        tick_n = 1 + ceil((max(times) - min(times)) / 1000)
+        plt.xticks(np.arange(tick_n) + int(min(times) / 1000))
+        fig.set_size_inches(tick_n*0.25, 5)
+        plt.show()
 
     def compute_means(self, sample_len):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))

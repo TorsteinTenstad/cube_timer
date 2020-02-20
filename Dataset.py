@@ -4,11 +4,12 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from math import ceil
 
 from Session import Session
 
-class Dataset:
 
+class Dataset:
     measures_of_interest = {'Single': [1, 0, 'C2'],
                             'Average of 5': [5, 1, 'C1'],
                             'Average of 12': [12, 1, 'C0'],
@@ -66,7 +67,8 @@ class Dataset:
         for key, value in self.measures_of_interest.items():
             df = pd.DataFrame()
             for name, session in self.sessions_counting_towards_pbs.items():
-                best_average = session.get_best_average(self.measures_of_interest[key][0], self.measures_of_interest[key][1])
+                best_average = session.get_best_average(self.measures_of_interest[key][0],
+                                                        self.measures_of_interest[key][1])
                 df = df.append(best_average, ignore_index=True)
             df.sort_values(by=['c2'], inplace=True, ascending=True)
             times = df.iloc[:, 0].to_numpy()
@@ -83,18 +85,22 @@ class Dataset:
     def plot_pbs(self):
         pbs = self.get_pbs()
         fig, ax = plt.subplots()
+        min_time = 60000
+        max_time = 0
         for key, value in pbs.items():
             times = value.iloc[:, 0].to_numpy()
+            min_time = min(min(times), min_time)
+            max_time = max(max(times), max_time)
             dates = value.iloc[:, 2].to_list()
-            ax.plot(dates, times/1000, color=self.measures_of_interest[key][2], marker='o')
+            ax.plot(dates, times / 1000, color=self.measures_of_interest[key][2], marker='o')
             for i in range(1, times.size):
-                times[i] = times[i] if not np.isnan(times[i]) else times[i-1]
-            ax.plot(dates, times/1000, color=self.measures_of_interest[key][2], linestyle='-', label=key)
+                times[i] = times[i] if not np.isnan(times[i]) else times[i - 1]
+            ax.plot(dates, times / 1000, color=self.measures_of_interest[key][2], linestyle='-', label=key)
 
         fig.set_size_inches(8, 5)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%y"))
         fig.set_dpi(300)
-        plt.yticks(np.arange(18)+17)
+        plt.yticks(np.arange(1 + ceil((max_time - min_time) / 1000)) + int(min_time / 1000))
         plt.ylabel('Seconds')
         plt.legend(loc='best')
         plt.title('PBs')
