@@ -7,13 +7,10 @@ import matplotlib.dates as mdates
 from math import ceil
 
 from Session import Session
+from config import measures_of_interest
 
 
 class Dataset:
-    measures_of_interest = {'Single': [1, 0, 'C2'],
-                            'Average of 5': [5, 1, 'C1'],
-                            'Average of 12': [12, 1, 'C0'],
-                            'Average of 100': [100, 10, 'C3']}
 
     def __init__(self, data_file):
         self.data_file = data_file
@@ -64,11 +61,11 @@ class Dataset:
 
     def get_pbs(self):
         pbs = {}
-        for key, value in self.measures_of_interest.items():
+        for key, value in measures_of_interest.items():
             df = pd.DataFrame()
             for name, session in self.sessions_counting_towards_pbs.items():
-                best_average = session.get_best_average(self.measures_of_interest[key][0],
-                                                        self.measures_of_interest[key][1])
+                best_average = session.get_best_average(measures_of_interest[key][0],
+                                                        measures_of_interest[key][1])
                 df = df.append(best_average, ignore_index=True)
             df.sort_values(by=['c2'], inplace=True, ascending=True)
             times = df.iloc[:, 0].to_numpy()
@@ -92,10 +89,10 @@ class Dataset:
             min_time = min(min(times), min_time)
             max_time = max(max(times), max_time)
             dates = value.iloc[:, 2].to_list()
-            ax.plot(dates, times / 1000, color=self.measures_of_interest[key][2], marker='o')
+            ax.plot(dates, times / 1000, color=measures_of_interest[key][2], marker='o')
             for i in range(1, times.size):
                 times[i] = times[i] if not np.isnan(times[i]) else times[i - 1]
-            ax.plot(dates, times / 1000, color=self.measures_of_interest[key][2], linestyle='-', label=key)
+            ax.plot(dates, times / 1000, color=measures_of_interest[key][2], linestyle='-', label=key)
 
         fig.set_size_inches(8, 5)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%y"))
