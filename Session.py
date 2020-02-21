@@ -37,6 +37,8 @@ class Session:
             bins_t = bin_width*np.arange(bin_n_t) + min_tick_t
             plt.hist(times_truncated/1000, bins=bins, alpha=1, color='royalblue', label='Middle 80%')
         plt.xticks(bins)
+        plt.xlabel('Seconds')
+        plt.title('Histogram for session '+self.name)
         fig.set_size_inches(bin_n*0.5, 5)
         plt.show()
 
