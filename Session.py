@@ -27,7 +27,7 @@ class Session:
         min_tick += bin_width*int((min(times) / 1000 - min_tick)/bin_width)
         bin_n = (max(times) / 1000 - min_tick) / bin_width + 1
         bins = bin_width*np.arange(bin_n) + min_tick
-        plt.hist(times/1000, bins=bins, alpha=1, label='All times')
+        plt.hist(times/1000, bins=bins, alpha=1, color='cornflowerblue', label='All times')
         if show_middle_80:
             discard_amount = int(0.1*times.size)
             times_truncated = np.sort(times)
@@ -35,8 +35,7 @@ class Session:
             min_tick_t = bin_width*int((min(times_truncated) / 1000 - min_tick)/bin_width)
             bin_n_t = (max(times_truncated) / 1000 - min_tick_t) / bin_width + 1
             bins_t = bin_width*np.arange(bin_n_t) + min_tick_t
-            plt.hist(times_truncated/1000, bins=bins, alpha=1, label='Middle 80%')
-            plt.legend()
+            plt.hist(times_truncated/1000, bins=bins, alpha=1, color='royalblue', label='Middle 80%')
         plt.xticks(bins)
         fig.set_size_inches(bin_n*0.5, 5)
         plt.show()
