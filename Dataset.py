@@ -47,7 +47,7 @@ class Dataset:
             print(session_name)
 
     def set_session_status(self, session_name, new_status, counting_towards_pbs):
-        for status, session_dict in self.sessions.items():
+        for status in ['start', 'pause', 'end']:
             if status != new_status:
                 session_to_move = self.sessions[status].pop(session_name, None)
                 if session_to_move:
