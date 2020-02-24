@@ -61,9 +61,9 @@ class Dataset:
             self.active_sessions.update({session_name: new_session})
             return new_session
 
-    def log_session_action(self, session_name, new_status, counting_towards_pbs):
+    def log_session_action(self, session_name, new_status='start', counting_towards_pbs=True):
         if self.set_session_status(session_name, new_status, counting_towards_pbs):
-            self.append_line_to_data_file('---Session', new_status, session_name, counting_towards_pbs)
+            self.append_line_to_data_file('---Session', new_status, session_name, counting_towards_pbs, '')
 
     def get_pbs(self):
         pbs = {}
