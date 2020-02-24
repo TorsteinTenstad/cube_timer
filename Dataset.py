@@ -19,7 +19,7 @@ class Dataset:
         self.active_sessions = {}
         self.paused_sessions = {}
         self.stopped_sessions = {}
-        self.sessions = {'start': self.active_sessions, 'pause': self.paused_sessions, 'end': self.stopped_sessions}
+        self.sessions = {'all': self.all_sessions, 'start': self.active_sessions, 'pause': self.paused_sessions, 'end': self.stopped_sessions, 'pb': self.sessions_counting_towards_pbs}
 
         df = pd.read_csv(self.data_file, sep=';')
         for index, row in df.iterrows():
@@ -29,16 +29,22 @@ class Dataset:
                 for session_name, session in self.active_sessions.items():
                     row['c2'] = pd.to_datetime(row['c2'], format="%d/%m/%Y")
                     session.add_data_point(row.to_frame().transpose())
-        #
-        # for session_dir in self.sessions.values():
-        #     for session in session_dir.values():
-        #         session.print_session()
 
     def add_data_point(self, time_s, scramble, penalty):
         new_df = self.append_line_to_data_file(int(time_s * 1000), datetime.now().strftime(
             "%H:%M:%S"), date.today().strftime("%d/%m/%Y"), scramble, penalty)
         for session_name, session in self.active_sessions.items():
             session.add_data_point(new_df)
+
+    def print_number_of_solves(self):
+        for session_name, session in self.active_sessions.items():
+            if session_name in self.sessions_counting_towards_pbs.keys():
+                print('Solves in session ' + session_name + ':', len(session.df) + 1)
+
+    def lst(self, type='start'):
+        for session_name, session in self.sessions[type].items():
+            setattr(self, session_name, session)
+            print(session_name)
 
     def set_session_status(self, session_name, new_status, counting_towards_pbs):
         for status, session_dict in self.sessions.items():

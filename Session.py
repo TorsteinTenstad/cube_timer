@@ -16,11 +16,11 @@ class Session:
     def add_data_point(self, data_point):
         self.df = self.df.append(data_point, ignore_index=True)
 
-    def print_session(self):
+    def print(self):
         print('\n', self.name)
         print(self.df)
 
-    def plot_histogram(self, show_middle_80=True, bin_width=1):
+    def hist(self, show_middle_80=True, bin_width=1):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
         fig, ax = plt.subplots()
         min_tick = int(min(times) / 1000)
@@ -93,7 +93,7 @@ class Session:
         radius = int(stdtrit(self.df.size-1, 1-(1-interval_size)/2)*np.sqrt(sample_variance/self.df.size))
         return np.asarray([sample_mean - radius, sample_mean + radius])
 
-    def print_summary(self):
+    def summary(self):
         print('Session:', self.name)
         print('Solves:', len(self.df))
         for key, value in measures_of_interest.items():

@@ -4,7 +4,7 @@ import time
 
 class Timer:
 
-    def __init__(self, send_time_func, scramble_func, trigger_key='space', quit_key='q', add_2_key='2', dnf_key='d', min_hold_time=1):
+    def __init__(self, send_time_func, scramble_func, call_on_finish, trigger_key='space', quit_key='q', add_2_key='2', dnf_key='d', min_hold_time=1):
         self.send_time_func = send_time_func
         self.scramble_func = scramble_func
         self.trigger_key = trigger_key
@@ -12,6 +12,7 @@ class Timer:
         self.add_2_key = add_2_key
         self.dnf_key = dnf_key
         self.min_hold_time = min_hold_time
+        self.call_on_finish = call_on_finish
 
         self.state = 0
         self.recorded_time = -1
@@ -72,6 +73,7 @@ class Timer:
                 if keyboard.is_pressed(self.trigger_key):
                     self.recorded_time = time.time() - start_time
                     print('Time: ', self.recorded_time)
+                    self.call_on_finish()
                     self.scramble = new_scramble
                     new_scramble = self.scramble_func()
                     print(new_scramble)
