@@ -44,6 +44,7 @@ class Timer:
 
         while True:
             if self.state == 0:  # waiting for input
+                time.sleep(0.1)
                 if keyboard.is_pressed(self.trigger_key):
                     hold_start = time.time()
                     self.state = 1
