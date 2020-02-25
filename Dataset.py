@@ -65,6 +65,40 @@ class Dataset:
         if self.set_session_status(session_name, new_status, counting_towards_pbs):
             self.append_line_to_data_file('---Session', new_status, session_name, counting_towards_pbs, '')
 
+    def get_auto_sessions(self, status):
+        return_list = []
+        for session_name in self.sessions[status]:
+            if session_name[0] == 's' and session_name[1:].isnumeric():
+                return_list.append(session_name)
+        return return_list
+
+    def auto_start(self):
+        existing_active_auto_sessions = self.get_auto_sessions('start')
+        if len(existing_active_auto_sessions) == 0:
+            existing_auto_sessions = self.get_auto_sessions('all')
+            newest_session_num = 0
+            for session_name in existing_auto_sessions:
+                newest_session_num = max(newest_session_num, int(session_name[1:]))
+            session_name = 's' + str(newest_session_num + 1)
+            print('Session ' + session_name + ' started')
+            self.log_session_action(session_name, 'start')
+        else:
+            print('Active sessions are preventing automatic start of new session')
+        print('Active sessions:')
+        self.lst()
+
+    def auto_stop(self):
+        existing_active_auto_sessions = self.get_auto_sessions('start')
+        if len(existing_active_auto_sessions) == 0:
+            print('No active automated sessions')
+        elif len(existing_active_auto_sessions) == 1:
+            print('Session ended: ' + existing_active_auto_sessions[0])
+            self.log_session_action(existing_active_auto_sessions[0], 'end')
+        elif len(existing_active_auto_sessions) > 1:
+            print('Error: Multiple automated sessions running')
+            print('Active sessions:')
+            self.lst()
+
     def get_pbs(self):
         pbs = {}
         for key, value in measures_of_interest.items():

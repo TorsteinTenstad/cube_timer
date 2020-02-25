@@ -1,5 +1,5 @@
 ﻿c0;c1;c2;c3;c4
----Session;start;global;False;
+---Session;start;global_session;False;
 ---Session;start;old0;True;
 32634;12:00:00;11/12/2019;;
 31220;12:00:00;11/12/2019;;
@@ -1159,3 +1159,17 @@
 21166;20:56:00;24/02/2020;R U2 D R' F D2 R2 B U L F D2 B2 D2 B' L2 D2 F U2 R2;
 37591;20:57:00;24/02/2020;F2 L' B' L' U2 B U B2 U2 F D R2 F' U2 D2 F2 U2 L2 B';
 ---Session;end;s8;
+---Session;start;s9;True;
+28390;11:00:15;25/02/2020;B D' U' B R' B F R B2 L D R U' L' F D' R D2 R' F2;
+24272;11:06:00;25/02/2020;F2 U2 F2 U' L' B D R F' L' U R2 F' L' B2 L U2 L' U R2;
+25969;11:08:32;25/02/2020;U2 F U' F2 L2 R' U2 D2 F' L2 B2 R2 U R2 L B L' D' B' R';
+24710;11:09:56;25/02/2020;R' F' L2 U R U' F' B2 U B2 L2 U B L2 B F' D2 F2 B R';
+25600;11:10:31;25/02/2020;D B' L' R F B' U F' D2 R' U R' D2 L2 U F' U' D' R2 U2;
+---Session;end;s9;True;
+---Session;start;s9;True;
+21822;11:54:38;25/02/2020;D' L2 U L' R' U L' B' D' L B2 R' F2 U L D2 B2 U2 D' R';
+22240;11:55:22;25/02/2020;L2 B' U' D' R' F L' F' L U2 L' F2 L U' L' B' D' F R2 U;
+21633;11:57:23;25/02/2020;D L F' R2 D' U B2 F2 U' R L' U2 R F B' D2 B' D2 R2 B;
+21758;11:58:18;25/02/2020;D F' R D' R2 F R U2 L' R F2 B' D B2 R L F2 D L2 B2;
+21813;11:58:43;25/02/2020;U2 L D2 U' F' U R' D' F2 U2 D' R U F2 B' L2 B U R2 D;
+---Session;end;s9;True;
