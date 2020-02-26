@@ -15,7 +15,7 @@ class Session:
         return
 
     def add_data_point(self, data_point):
-        self.df = self.df.append(data_point, ignore_index=True)
+        self.df = self.df.append(data_point)
 
     def print(self):
         print('\n', self.name)
@@ -47,8 +47,8 @@ class Session:
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
         if sample_len > times.size:
             return pd.DataFrame(
-                {'c0': np.NaN * np.ones(sample_len), 'c1': np.NaN * np.ones(sample_len), 'c2': self.df.iat[0, 2],
-                 'c3': np.NaN * np.ones(sample_len)})
+                {'Solvetime': np.NaN * np.ones(sample_len), 'Time of day': np.NaN * np.ones(sample_len), 'Date': self.df.iat[0, 2],
+                 'Scramble': np.NaN * np.ones(sample_len)})
         means = np.zeros(times.size)
         for i in range(sample_len):
             means = np.add(means, np.roll(times, i))
@@ -62,8 +62,8 @@ class Session:
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
         if sample_len > times.size:
             return pd.DataFrame(
-                {'c0': np.NaN * np.ones(sample_len), 'c1': np.NaN * np.ones(sample_len), 'c2': self.df.iat[0, 2],
-                 'c3': np.NaN * np.ones(sample_len)})
+                {'Solvetime': np.NaN * np.ones(sample_len), 'Time of day': np.NaN * np.ones(sample_len), 'Date': self.df.iat[0, 2],
+                 'Scramble': np.NaN * np.ones(sample_len)})
         averages = np.ones(times.size)
         for i in range(sample_len, times.size + 1):
             sample = times[i - sample_len: i]
@@ -77,7 +77,7 @@ class Session:
 
     def get_best_average(self, sample_len, discard_amount):
         row = self.compute_averages(sample_len, discard_amount)
-        row = row.iloc[sample_len - 1:, :].sort_values(by=['c0'])
+        row = row.iloc[sample_len - 1:, :].sort_values(by=['Solvetime'])
         row.iloc[:, 3] = self.name
         return row.iloc[0, :]
 

@@ -14,6 +14,7 @@ from config import measures_of_interest
 class Dataset:
 
     def __init__(self, data_file):
+        self.df = pd.DataFrame()
         self.data_file = data_file
         self.all_sessions = {}
         self.sessions_counting_towards_pbs = {}
@@ -23,17 +24,20 @@ class Dataset:
         self.sessions = {'all': self.all_sessions, 'start': self.active_sessions, 'pause': self.paused_sessions, 'end': self.stopped_sessions, 'pb': self.sessions_counting_towards_pbs}
 
         if os.path.exists(self.data_file):
-            df = pd.read_csv(self.data_file, sep=';')
-            for index, row in df.iterrows():
-                if row['c0'] == '---Session':
-                    self.set_session_status(row['c2'], row['c1'], row['c3'] == 'True')
-                else:
-                    for session_name, session in self.active_sessions.items():
-                        row['c2'] = pd.to_datetime(row['c2'], format="%d/%m/%Y")
-                        session.add_data_point(row.to_frame().transpose())
+            self.df = pd.read_csv(self.data_file, sep=';')
+            self.df.apply(self.load_line_into_dataset, axis=1)
+
         else:
-            self.append_line_to_data_file('c0', 'c1', 'c2', 'c3', 'c4')
+            self.append_line_to_data_file('Solvetime', 'Time of day', 'Date', 'Scramble', 'Penalty')
             self.log_session_action('global_session', 'start', False)
+
+    def load_line_into_dataset(self, row):
+        if row['Solvetime'] == '---Session':
+            self.set_session_status(row['Date'], row['Time of day'], row['Scramble'] == 'True')
+        else:
+            for session_name, session in self.active_sessions.items():
+                row['Date'] = pd.to_datetime(row['Date'], format="%d/%m/%Y")
+                session.add_data_point(row.to_frame().transpose())
 
     def add_data_point(self, time_s, scramble, penalty):
         new_df = self.append_line_to_data_file(int(time_s * 1000), datetime.now().strftime(
@@ -105,6 +109,11 @@ class Dataset:
             print('Active sessions:')
             self.lst()
 
+    def get(self, index):
+        row = self.df.loc[index]
+        print(row)
+        return row
+
     def get_pbs(self):
         pbs = {}
         for key, value in measures_of_interest.items():
@@ -112,8 +121,8 @@ class Dataset:
             for name, session in self.sessions_counting_towards_pbs.items():
                 best_average = session.get_best_average(measures_of_interest[key][0],
                                                         measures_of_interest[key][1])
-                df = df.append(best_average, ignore_index=True)
-            df.sort_values(by=['c2'], inplace=True, ascending=True)
+                df = df.append(best_average, ignore_index=False)
+            df.sort_values(by=['Date'], inplace=True, ascending=True)
             times = df.iloc[:, 0].to_numpy()
             pb_time = times[0]
             for i in range(1, times.size):
@@ -129,8 +138,9 @@ class Dataset:
         pbs = self.get_pbs()
         print('PBs:')
         for key, df in pbs.items():
-            df = df.sort_values('c0')
-            print('Best', key[0].lower() + key[1:] + ':' + measures_of_interest[key][3], df.iat[0, 0] / 1000, '(' + df.iat[0, 3] + ')')
+            df = df.sort_values('Solvetime')
+            print('Best', key[0].lower() + key[1:] + ':' + measures_of_interest[key][3], df.iat[0, 0] / 1000, '(' + str(df.index[0]) + ')')
+            print('Best', key[0].lower() + key[1:] + ':' + measures_of_interest[key][3], df.iat[0, 0] / 1000, '(' + str(df.index[0]) + ')')
 
     def plot_pbs(self):
         pbs = self.get_pbs()
@@ -156,7 +166,7 @@ class Dataset:
         plt.grid()
         plt.show()
 
-    def append_line_to_data_file(self, c0, c1, c2, c3, c4):
-        new_df = pd.DataFrame({'c0': [c0], 'c1': [c1], 'c2': [c2], 'c3': [c3], 'c4': [c4]})
+    def append_line_to_data_file(self, solvetime, time_of_day, date, scramble, penalty):
+        new_df = pd.DataFrame({'Solvetime': [solvetime], 'Time of day': [time_of_day], 'Date': [date], 'Scramble': [scramble], 'Penalty': [penalty]})
         new_df.to_csv(self.data_file, mode='a', header=False, index=False, sep=';')
         return new_df
