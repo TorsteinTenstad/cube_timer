@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import date
 import pandas as pd
 import numpy as np
+import os as os
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from math import ceil
@@ -21,14 +22,18 @@ class Dataset:
         self.stopped_sessions = {}
         self.sessions = {'all': self.all_sessions, 'start': self.active_sessions, 'pause': self.paused_sessions, 'end': self.stopped_sessions, 'pb': self.sessions_counting_towards_pbs}
 
-        df = pd.read_csv(self.data_file, sep=';')
-        for index, row in df.iterrows():
-            if row['c0'] == '---Session':
-                self.set_session_status(row['c2'], row['c1'], row['c3'] == 'True')
-            else:
-                for session_name, session in self.active_sessions.items():
-                    row['c2'] = pd.to_datetime(row['c2'], format="%d/%m/%Y")
-                    session.add_data_point(row.to_frame().transpose())
+        if os.path.exists(self.data_file):
+            df = pd.read_csv(self.data_file, sep=';')
+            for index, row in df.iterrows():
+                if row['c0'] == '---Session':
+                    self.set_session_status(row['c2'], row['c1'], row['c3'] == 'True')
+                else:
+                    for session_name, session in self.active_sessions.items():
+                        row['c2'] = pd.to_datetime(row['c2'], format="%d/%m/%Y")
+                        session.add_data_point(row.to_frame().transpose())
+        else:
+            self.append_line_to_data_file('c0', 'c1', 'c2', 'c3', 'c4')
+            self.log_session_action('global_session', 'start', False)
 
     def add_data_point(self, time_s, scramble, penalty):
         new_df = self.append_line_to_data_file(int(time_s * 1000), datetime.now().strftime(
