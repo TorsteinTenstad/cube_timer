@@ -124,9 +124,15 @@ class Dataset:
             pbs.update({key: df})
         return pbs
 
+    def pbs(self):
+        pbs = self.get_pbs()
+        print('PBs:')
+        for key, df in pbs.items():
+            df = df.sort_values('c0')
+            print('Best', key[0].lower() + key[1:] + ':' + measures_of_interest[key][3], df.iat[0, 0] / 1000, '(' + df.iat[0, 3] + ')')
+
     def plot_pbs(self):
         pbs = self.get_pbs()
-        print(pbs)
         fig, ax = plt.subplots()
         min_time = 60000
         max_time = 0
