@@ -121,19 +121,19 @@ class Dataset:
 
     def plot_pbs(self):
         pbs = self.get_pbs()
+        print(pbs)
         fig, ax = plt.subplots()
         min_time = 60000
         max_time = 0
         for key, value in pbs.items():
             times = value.iloc[:, 0].to_numpy()
-            min_time = min(min(times), min_time)
-            max_time = max(max(times), max_time)
+            min_time = min_time if (min_time < min(times) or np.isnan(min(times))) else min(times)
+            max_time = max_time if (max_time > max(times) or np.isnan(max(times))) else max(times)
             dates = value.iloc[:, 2].to_list()
             ax.plot(dates, times / 1000, color=measures_of_interest[key][2], marker='o')
             for i in range(1, times.size):
                 times[i] = times[i] if not np.isnan(times[i]) else times[i - 1]
             ax.plot(dates, times / 1000, color=measures_of_interest[key][2], linestyle='-', label=key)
-
         fig.set_size_inches(8, 5)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%y"))
         fig.set_dpi(300)
