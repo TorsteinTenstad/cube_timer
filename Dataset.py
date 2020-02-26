@@ -68,6 +68,7 @@ class Dataset:
 
     def log_session_action(self, session_name, new_status='start', counting_towards_pbs=True):
         if self.set_session_status(session_name, new_status, counting_towards_pbs):
+            counting_towards_pbs = counting_towards_pbs if new_status == 'start' else ''
             self.append_line_to_data_file('---Session', new_status, session_name, counting_towards_pbs, '')
 
     def get_auto_sessions(self, status):
@@ -92,13 +93,13 @@ class Dataset:
         print('Active sessions:')
         self.lst()
 
-    def auto_stop(self):
+    def auto_end(self):
         existing_active_auto_sessions = self.get_auto_sessions('start')
         if len(existing_active_auto_sessions) == 0:
             print('No active automated sessions')
         elif len(existing_active_auto_sessions) == 1:
             print('Session ended: ' + existing_active_auto_sessions[0])
-            self.log_session_action(existing_active_auto_sessions[0], 'end')
+            self.log_session_action(existing_active_auto_sessions[0], 'end', )
         elif len(existing_active_auto_sessions) > 1:
             print('Error: Multiple automated sessions running')
             print('Active sessions:')
