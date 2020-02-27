@@ -130,7 +130,8 @@ class Dataset:
         print('PBs:')
         for key, df in pbs.items():
             df = df.sort_values('Solvetime')
-            print('Best', key[0].lower() + key[1:] + ':' + measures_of_interest[key][3], df.iat[0, 0] / 1000, '(' + str(df.index[0]) + ')')
+            id_string = '' if np.isnan(df.iat[0, 0]) else '\t(' + str(df.index[0]) + ')'
+            print('Best', key[0].lower() + key[1:] + ':' + measures_of_interest[key][3], str(df.iat[0, 0] / 1000) + id_string)
 
     def plot_pbs(self):
         pbs = self.summaries()

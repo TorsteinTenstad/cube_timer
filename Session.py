@@ -43,21 +43,21 @@ class Session:
         fig.set_size_inches(bin_n * 0.5, 5)
         plt.show()
 
-    def compute_means(self, sample_len):
-        times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
-        if sample_len > times.size:
-            return pd.DataFrame(
-                {'Solvetime': np.NaN * np.ones(sample_len), 'Time of day': np.NaN * np.ones(sample_len), 'Date': self.df.iat[0, 2],
-                 'Scramble': np.NaN * np.ones(sample_len)})
-        means = np.zeros(times.size)
-        for i in range(sample_len):
-            means = np.add(means, np.roll(times, i))
-        means /= sample_len
-        means[0:sample_len - 1] = np.NaN
-        means_df = self.df.copy()
-        means_df.iloc[:, 0] = means.astype(dtype=np.dtype(np.int64))
-        return means_df
-
+    # def compute_means(self, sample_len):
+    #     times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+    #     if sample_len > times.size:
+    #         return pd.DataFrame(
+    #             {'Solvetime': np.NaN * np.ones(sample_len), 'Time of day': np.NaN * np.ones(sample_len), 'Date': self.df.iat[0, 2],
+    #              'Scramble': np.NaN * np.ones(sample_len)})
+    #     means = np.zeros(times.size)
+    #     for i in range(sample_len):
+    #         means = np.add(means, np.roll(times, i))
+    #     means /= sample_len
+    #     means[0:sample_len - 1] = np.NaN
+    #     means_df = self.df.copy()
+    #     means_df.iloc[:, 0] = means.astype(dtype=np.dtype(np.int64))
+    #     return means_df
+    #
     def compute_averages(self, sample_len, discard_amount):
         session_length = len(self.df)
         averages_df = self.df.copy()
@@ -105,9 +105,10 @@ class Session:
         print('Solves:', len(self.df))
         for key, value in measures_of_interest.items():
             best_average = self.get_best_average(value[0], value[1])
-            print('Best', key[0].lower() + key[1:] + ':' + value[3], best_average[0] / 1000)
-        print('Total mean:\t\t\t', self.compute_sample_mean() / 1000)
-        print('Confidence interval:', self.compute_confidence_interval_global_mean() / 1000)
+            id_string = '' if np.isnan(best_average[0]) else '\t(' + str(best_average.name) + ')'
+            print('Best', key[0].lower() + key[1:] + ':' + value[3], str(best_average[0] / 1000) + id_string)
+        print('Total mean:\t\t', self.compute_sample_mean() / 1000)
+        print('Confidence interval:\t', self.compute_confidence_interval_global_mean() / 1000)
 
     def trend(self):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
