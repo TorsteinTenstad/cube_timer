@@ -106,9 +106,9 @@ class Session:
         for key, value in measures_of_interest.items():
             best_average = self.get_best_average(value[0], value[1])
             id_string = '' if np.isnan(best_average[0]) else '\t(' + str(best_average.name) + ')'
-            print('Best', key[0].lower() + key[1:] + ':' + value[3], str(best_average[0] / 1000) + id_string)
-        print('Total mean:\t\t', self.compute_sample_mean() / 1000)
-        print('Confidence interval:\t', self.compute_confidence_interval_global_mean() / 1000)
+            print('Best ' + key[0].lower() + key[1:] + ':' + value[3] + str(best_average[0] / 1000) + id_string)
+        print('Total mean:\t\t' +  str(self.compute_sample_mean() / 1000))
+        print('Confidence interval:\t' + str(self.compute_confidence_interval_global_mean() / 1000))
 
     def trend(self):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))

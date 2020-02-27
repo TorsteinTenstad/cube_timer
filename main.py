@@ -12,7 +12,5 @@ def new_dataset(filename):
 
 
 scrambler = Scrambler(20)
-ds = Dataset('beginner.txt')
+ds = Dataset('times.txt')
 timer = Timer(ds.add_data_point, scrambler.generate_scramble, ds.print_number_of_solves)
-ds.pbs()
-ds.plot_pbs()
