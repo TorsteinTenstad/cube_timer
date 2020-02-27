@@ -59,27 +59,29 @@ class Session:
         return means_df
 
     def compute_averages(self, sample_len, discard_amount):
-        times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
-        if sample_len > times.size:
-            return pd.DataFrame(
-                {'Solvetime': np.NaN * np.ones(sample_len), 'Time of day': np.NaN * np.ones(sample_len), 'Date': self.df.iat[0, 2],
-                 'Scramble': np.NaN * np.ones(sample_len)})
-        averages = np.ones(times.size)
-        for i in range(sample_len, times.size + 1):
-            sample = times[i - sample_len: i]
-            sample = np.sort(sample)
-            sample = sample[discard_amount:sample.size - discard_amount]
-            averages[i - 1] = np.average(sample)
-        averages[0:sample_len - 1] = np.NaN
+        session_length = len(self.df)
         averages_df = self.df.copy()
-        averages_df.iloc[:, 0] = averages.astype(dtype=np.dtype(np.int64))
+        if sample_len > session_length:
+            averages_df['Solvetime'] = np.NaN * np.ones(session_length)
+            averages_df['Time of day'] = np.NaN * np.ones(session_length)
+            averages_df['Scramble'] = np.NaN * np.ones(session_length)
+            averages_df['Penalty'] = np.NaN * np.ones(session_length)
+        else:
+            times = self.df.iloc[:, 0].to_numpy(dtype='Int64')
+            averages = np.ones(times.size)
+            for i in range(times.size - sample_len + 1):
+                sample = times[i: i + sample_len]
+                sample = np.sort(sample)
+                sample = sample[discard_amount:sample.size - discard_amount]
+                averages[i + sample_len - 1] = int(np.average(sample))
+            averages[0:sample_len - 1] = np.NaN
+            averages_df['Solvetime'] = averages
         return averages_df
 
     def get_best_average(self, sample_len, discard_amount):
-        row = self.compute_averages(sample_len, discard_amount)
-        row = row.iloc[sample_len - 1:, :].sort_values(by=['Solvetime'])
-        row.iloc[:, 3] = self.name
-        return row.iloc[0, :]
+        averages_df = self.compute_averages(sample_len, discard_amount).sort_values(by=['Solvetime'])
+        averages_df.iat[0,3] = np.NaN
+        return averages_df.iloc[0,:]
 
     def compute_sample_mean(self):
         return int(np.average(self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))))

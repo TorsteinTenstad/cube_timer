@@ -111,13 +111,12 @@ class Dataset:
 
     def get(self, index):
         row = self.df.loc[index]
-        print(row)
         return row
 
     def get_pbs(self):
         pbs = {}
         for key, value in measures_of_interest.items():
-            df = pd.DataFrame()
+            df = pd.DataFrame(columns=['Solvetime', 'Time of day', 'Date', 'Scramble', 'Penalty'])
             for name, session in self.sessions_counting_towards_pbs.items():
                 best_average = session.get_best_average(measures_of_interest[key][0],
                                                         measures_of_interest[key][1])
@@ -139,7 +138,6 @@ class Dataset:
         print('PBs:')
         for key, df in pbs.items():
             df = df.sort_values('Solvetime')
-            print('Best', key[0].lower() + key[1:] + ':' + measures_of_interest[key][3], df.iat[0, 0] / 1000, '(' + str(df.index[0]) + ')')
             print('Best', key[0].lower() + key[1:] + ':' + measures_of_interest[key][3], df.iat[0, 0] / 1000, '(' + str(df.index[0]) + ')')
 
     def plot_pbs(self):
