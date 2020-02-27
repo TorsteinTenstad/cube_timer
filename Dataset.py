@@ -127,14 +127,20 @@ class Dataset:
 
     def pbs(self):
         pbs = self.summaries()
+        if list(pbs.values())[0].empty:
+            print('Dataset does not include any sessions that count towards PBs')
+            return
         print('PBs:')
         for key, df in pbs.items():
             df = df.sort_values('Solvetime')
             id_string = '' if np.isnan(df.iat[0, 0]) else '\t(' + str(df.index[0]) + ')'
-            print('Best', key[0].lower() + key[1:] + ':' + measures_of_interest[key][3], str(df.iat[0, 0] / 1000) + id_string)
+            print('Best ' + key[0].lower() + key[1:] + ':' + measures_of_interest[key][3] + str(df.iat[0, 0] / 1000) + id_string)
 
     def plot_pbs(self):
         pbs = self.summaries()
+        if list(pbs.values())[0].empty:
+            print('Dataset does not include any sessions that count towards PBs')
+            return
         fig, ax = plt.subplots()
         min_time = 60000
         max_time = 0
