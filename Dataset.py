@@ -113,8 +113,8 @@ class Dataset:
         row = self.df.loc[index]
         return row
 
-    def get_pbs(self):
-        pbs = {}
+    def summaries(self):
+        summaries = {}
         for key, value in measures_of_interest.items():
             df = pd.DataFrame(columns=['Solvetime', 'Time of day', 'Date', 'Scramble', 'Penalty'])
             for name, session in self.sessions_counting_towards_pbs.items():
@@ -122,31 +122,29 @@ class Dataset:
                                                         measures_of_interest[key][1])
                 df = df.append(best_average, ignore_index=False)
             df.sort_values(by=['Date'], inplace=True, ascending=True)
-            times = df.iloc[:, 0].to_numpy()
-            pb_time = times[0]
-            for i in range(1, times.size):
-                if times[i] > pb_time:
-                    times[i] = pb_time
-                elif not np.isnan(times[i]):
-                    pb_time = times[i]
-            df.iloc[:, 0] = times
-            pbs.update({key: df})
-        return pbs
+            summaries.update({key: df})
+        return summaries
 
     def pbs(self):
-        pbs = self.get_pbs()
+        pbs = self.summaries()
         print('PBs:')
         for key, df in pbs.items():
             df = df.sort_values('Solvetime')
             print('Best', key[0].lower() + key[1:] + ':' + measures_of_interest[key][3], df.iat[0, 0] / 1000, '(' + str(df.index[0]) + ')')
 
     def plot_pbs(self):
-        pbs = self.get_pbs()
+        pbs = self.summaries()
         fig, ax = plt.subplots()
         min_time = 60000
         max_time = 0
         for key, value in pbs.items():
             times = value.iloc[:, 0].to_numpy()
+            pb_time = times[0]
+            for i in range(1, times.size):
+                if times[i] > pb_time:
+                    times[i] = pb_time
+                elif not np.isnan(times[i]):
+                    pb_time = times[i]
             min_time = min_time if (min_time < min(times) or np.isnan(min(times))) else min(times)
             max_time = max_time if (max_time > max(times) or np.isnan(max(times))) else max(times)
             dates = value.iloc[:, 2].to_list()
