@@ -42,6 +42,7 @@ class Dataset:
     def add_data_point(self, time_s, scramble, penalty):
         new_df = self.append_line_to_data_file(int(time_s * 1000), datetime.now().strftime(
             "%H:%M:%S"), date.today().strftime("%d/%m/%Y"), scramble, penalty)
+        self.df = self.df.append(new_df)
         for session_name, session in self.active_sessions.items():
             session.add_data_point(new_df)
 
@@ -170,6 +171,6 @@ class Dataset:
         plt.show()
 
     def append_line_to_data_file(self, solvetime, time_of_day, date, scramble, penalty):
-        new_df = pd.DataFrame({'Solvetime': [solvetime], 'Time of day': [time_of_day], 'Date': [date], 'Scramble': [scramble], 'Penalty': [penalty]})
+        new_df = pd.DataFrame({'Solvetime': [solvetime], 'Time of day': [time_of_day], 'Date': [date], 'Scramble': [scramble], 'Penalty': [penalty]}, index=[len(self.df)])
         new_df.to_csv(self.data_file, mode='a', header=False, index=False, sep=';')
         return new_df
