@@ -6,7 +6,7 @@ from time_data_formatter import time_data_formatter
 
 
 def new_dataset(filename, print_message=True):
-    dataset = Dataset(filename)
+    dataset = Dataset(dataset_folder + filename)
     if print_message:
         print('Creating dataset from file: ' + filename)
         print('This is now the active dataset')
@@ -21,8 +21,8 @@ def set_active_dataset(dataset):
     dataset.lst()
 
 
-data = 'times.txt'
-
+dataset_folder = 'datasets/'
+data = '3x3.txt'
 
 scrambler = Scrambler(20)
 timer = Timer(scrambler.generate_scramble)

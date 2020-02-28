@@ -1,0 +1,9 @@
+Solvetime;Time of day;Date;Scramble;Penalty
+---Session;start;global_session;False;
+---Session;start;s0;True;
+41826;23:01:10;26/02/2020;F2 L R' U' F2 R2 L B2 L' R' B R B' D B L' R D R' L;
+55860;23:03:33;26/02/2020;F L2 U L2 F B' U R' L2 U B2 L' U R B2 R2 D U2 B F';
+34178;23:05:06;26/02/2020;L' D' L R2 B R D U' L' R2 D' F B' D' U R' D2 U F' R2;
+49828;23:08:16;26/02/2020;U' L' B2 U2 R U2 L R B2 L2 F2 R' U2 F U2 D2 B' L U2 R2;+2
+42108;23:10:41;26/02/2020;L2 F2 D' R L' D' F' D2 B' U R F' R2 L' F2 R D2 B F D';
+35041;23:20:29;26/02/2020;F L' R2 B D U2 B F' D U' R2 U2 R F' U2 B' D2 U2 L2 F2;
