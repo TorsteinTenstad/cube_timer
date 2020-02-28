@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from scipy.special import stdtrit
 import matplotlib.pyplot as plt
+from scipy import stats
 from math import ceil
 
 from config import measures_of_interest
@@ -107,7 +108,8 @@ class Session:
             best_average = self.get_best_average(value[0], value[1])
             id_string = '' if np.isnan(best_average[0]) else '\t(' + str(best_average.name) + ')'
             print('Best ' + key[0].lower() + key[1:] + ':' + value[3] + str(best_average[0] / 1000) + id_string)
-        print('Total mean:\t\t' +  str(self.compute_sample_mean() / 1000))
+        print('Total mean:\t\t' + str(self.compute_sample_mean() / 1000))
+        print('Standard deviation:\t' + str(int(np.sqrt(self.compute_sample_variance())) / 1000))
         print('Confidence interval:\t' + str(self.compute_confidence_interval_global_mean() / 1000))
 
     def trend(self):
@@ -115,9 +117,10 @@ class Session:
         fig, ax = plt.subplots()
         x = np.arange(times.size)
         y = times
-        a, b = np.polyfit(x, y, 1)
-        print('Estimated improvement per solve: %d' % -a + 'ms')
-        plt.plot(x, y / 1000, 'bo', x, (a*x+b) / 1000, 'r')
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+        print('Estimated improvement per solve: %d' % -slope + 'ms')
+        print('P-value: ', round(p_value, 3))
+        plt.plot(x, y / 1000, 'bo', x, (slope*x+intercept) / 1000, 'r')
         plt.ylabel('Seconds')
         plt.title('Times, session: ' + self.name)
         plt.grid()
