@@ -4,7 +4,7 @@ import time
 
 class Timer:
 
-    def __init__(self, send_time_func, scramble_func, call_on_finish, trigger_key='space', quit_key='q', add_2_key='2', dnf_key='d', min_hold_time=1):
+    def __init__(self, scramble_func, send_time_func=None, call_on_finish=None, trigger_key='space', quit_key='q', add_2_key='2', dnf_key='d', min_hold_time=1):
         self.send_time_func = send_time_func
         self.scramble_func = scramble_func
         self.trigger_key = trigger_key

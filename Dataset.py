@@ -51,9 +51,11 @@ class Dataset:
                 print('Solves in session ' + session_name + ':', len(session.df) + 1)
 
     def lst(self, type='start'):
+        table = []
         for session_name, session in self.sessions[type].items():
             setattr(self, session_name, session)
-            print(session_name + '\t\tsolves: ' + str(len(session.df)) + '\t' + session.df.iat[-1, 2])
+            table.append([session_name, str(len(session.df)), session.df.iat[-1, 2]])
+        print(pd.DataFrame(table, columns=['Name', 'Solves', 'End date']).to_string(index=False))
 
     def set_session_status(self, session_name, new_status, counting_towards_pbs):
         for status in ['start', 'pause', 'end']:
@@ -110,6 +112,7 @@ class Dataset:
             self.lst()
 
     def get(self, index):
+        pd.set_option('max_colwidth', 1000)
         row = self.df.loc[index]
         print(row.to_string())
 
