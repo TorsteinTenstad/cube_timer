@@ -113,9 +113,9 @@ class Dataset:
             print('Active sessions:')
             self.lst()
 
-    def get(self, index):
+    def get(self, index, num=1):
         pd.set_option('max_colwidth', 1000)
-        row = self.df.loc[index]
+        row = self.df.loc[index - num + 1:index]
         print(row.to_string())
 
     def summaries(self):
