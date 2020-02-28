@@ -36,7 +36,6 @@ class Dataset:
             self.set_session_status(row['Date'], row['Time of day'], row['Scramble'] == 'True')
         else:
             for session_name, session in self.active_sessions.items():
-                row['Date'] = pd.to_datetime(row['Date'], format="%d/%m/%Y")
                 session.add_data_point(row.to_frame().transpose())
 
     def add_data_point(self, time_s, scramble, penalty):
@@ -54,7 +53,7 @@ class Dataset:
     def lst(self, type='start'):
         for session_name, session in self.sessions[type].items():
             setattr(self, session_name, session)
-            print(session_name)
+            print(session_name + '\t\tsolves: ' + str(len(session.df)) + '\t' + session.df.iat[-1, 2])
 
     def set_session_status(self, session_name, new_status, counting_towards_pbs):
         for status in ['start', 'pause', 'end']:
@@ -112,7 +111,7 @@ class Dataset:
 
     def get(self, index):
         row = self.df.loc[index]
-        return row
+        print(row.to_string())
 
     def summaries(self):
         summaries = {}
@@ -125,6 +124,9 @@ class Dataset:
             df.sort_values(by=['Date'], inplace=True, ascending=True)
             summaries.update({key: df})
         return summaries
+
+    def print(self):
+        print(self.df.to_string())
 
     def pbs(self):
         pbs = self.summaries()

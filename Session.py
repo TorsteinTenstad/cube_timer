@@ -19,8 +19,7 @@ class Session:
         self.df = self.df.append(data_point)
 
     def print(self):
-        print('\n', self.name)
-        print(self.df)
+        print(self.df.to_string())
 
     def hist(self, show_middle_80=True, bin_width=1):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
