@@ -101,6 +101,9 @@ class Session:
         return np.asarray([sample_mean - radius, sample_mean + radius])
 
     def summary(self):
+        if len(self.df) < 1:
+            print('Can\'t show summary: No datapoints in session')
+            return
         print('Session:', self.name)
         print('Solves:', len(self.df))
         for key, value in measures_of_interest.items():
@@ -112,6 +115,9 @@ class Session:
         print('Confidence interval:\t' + str(self.compute_confidence_interval_global_mean() / 1000))
 
     def trend(self):
+        if len(self.df) < 2:
+            print('Can\'t show trend: Too few datapoints')
+            return
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
         fig, ax = plt.subplots()
         x = np.arange(times.size)
