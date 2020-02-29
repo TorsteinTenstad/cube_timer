@@ -21,7 +21,7 @@ class Session:
     def print(self):
         print(self.df.to_string(formatters={'Date': lambda x: x.strftime('%m/%d/%Y')}))
 
-    def hist(self, show_middle_80=True, bin_width=1):
+    def hist(self, bin_width=1, show_middle_80=True):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
         fig, ax = plt.subplots()
         min_tick = int(min(times) / 1000)
@@ -43,21 +43,6 @@ class Session:
         fig.set_size_inches(bin_n * 0.5, 5)
         plt.show()
 
-    # def compute_means(self, sample_len):
-    #     times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
-    #     if sample_len > times.size:
-    #         return pd.DataFrame(
-    #             {'Solvetime': np.NaN * np.ones(sample_len), 'Time of day': np.NaN * np.ones(sample_len), 'Date': self.df.iat[0, 2],
-    #              'Scramble': np.NaN * np.ones(sample_len)})
-    #     means = np.zeros(times.size)
-    #     for i in range(sample_len):
-    #         means = np.add(means, np.roll(times, i))
-    #     means /= sample_len
-    #     means[0:sample_len - 1] = np.NaN
-    #     means_df = self.df.copy()
-    #     means_df.iloc[:, 0] = means.astype(dtype=np.dtype(np.int64))
-    #     return means_df
-    #
     def compute_averages(self, sample_len, discard_amount):
         session_length = len(self.df)
         averages_df = self.df.copy()
