@@ -55,7 +55,7 @@ class Dataset:
         table = []
         for session_name, session in self.sessions[type].items():
             setattr(self, session_name, session)
-            start_date = '-' if session.df.empty else session.df.iat[0, 2].strftime('%m/%d/%Y')
+            start_date = '-' if session.df.empty else session.df.iat[0, 2].strftime('%d/%m/%Y')
             end_date = '-' if session_name in list(self.active_sessions.keys()) else session.df.iat[-1, 2].strftime('%m/%d/%Y')
             table.append([session_name, str(len(session.df)), start_date, end_date])
         print(pd.DataFrame(table, columns=['Name', 'Solves', 'Start date', 'End date']).to_string(index=False))

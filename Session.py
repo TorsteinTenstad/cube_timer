@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from scipy.special import stdtrit
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 from scipy import stats
 from math import ceil
 
@@ -19,7 +20,7 @@ class Session:
         self.df = self.df.append(data_point)
 
     def print(self):
-        print(self.df.to_string(formatters={'Date': lambda x: x.strftime('%m/%d/%Y')}))
+        print(self.df.to_string(formatters={'Date': lambda x: x.strftime('%d/%m/%Y')}))
 
     def hist(self, bin_width=1, show_middle_80=True):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
@@ -103,7 +104,8 @@ class Session:
         if len(self.df) < 2:
             print('Can\'t show trend: Too few datapoints')
             return
-        times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64)) if sample_len == 1 else self.compute_averages(sample_len, discard_amount).iloc[sample_len-1:, 0].to_numpy(dtype=np.dtype(np.int64))
+        times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64)) if sample_len == 1 else self.compute_averages(
+            sample_len, discard_amount).iloc[sample_len - 1:, 0].to_numpy(dtype=np.dtype(np.int64))
         fig, ax = plt.subplots()
         x = np.arange(times.size)
         y = times
@@ -112,6 +114,8 @@ class Session:
         print('P-value: ', round(p_value, 3))
         plt.plot(x, y / 1000, 'bo', x, (slope * x + intercept) / 1000, 'r')
         plt.ylabel('Seconds')
-        plt.title('Times, session: ' + self.name)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        title = 'Times' if sample_len == 1 else 'Averages of ' + str(sample_len)
+        plt.title(title + ', session: ' + self.name)
         plt.grid()
         plt.show()
