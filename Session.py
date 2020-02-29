@@ -80,8 +80,8 @@ class Session:
 
     def get_best_average(self, sample_len, discard_amount):
         averages_df = self.compute_averages(sample_len, discard_amount).sort_values(by=['Solvetime'])
-        averages_df.iat[0,3] = np.NaN
-        return averages_df.iloc[0,:]
+        averages_df.iat[0, 3] = np.NaN
+        return averages_df.iloc[0, :]
 
     def compute_sample_mean(self):
         return int(np.average(self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))))
@@ -114,18 +114,18 @@ class Session:
         print('Standard deviation:\t' + str(int(np.sqrt(self.compute_sample_variance())) / 1000))
         print('Confidence interval:\t' + str(self.compute_confidence_interval_global_mean() / 1000))
 
-    def trend(self):
+    def trend(self, sample_len=1, discard_amount=1):
         if len(self.df) < 2:
             print('Can\'t show trend: Too few datapoints')
             return
-        times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
+        times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64)) if sample_len == 1 else self.compute_averages(sample_len, discard_amount).iloc[sample_len-1:, 0].to_numpy(dtype=np.dtype(np.int64))
         fig, ax = plt.subplots()
         x = np.arange(times.size)
         y = times
-        slope, intercept, r_value, p_value, std_err = stats.linregress(x,y)
+        slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
         print('Estimated improvement per solve: %d' % -slope + 'ms')
         print('P-value: ', round(p_value, 3))
-        plt.plot(x, y / 1000, 'bo', x, (slope*x+intercept) / 1000, 'r')
+        plt.plot(x, y / 1000, 'bo', x, (slope * x + intercept) / 1000, 'r')
         plt.ylabel('Seconds')
         plt.title('Times, session: ' + self.name)
         plt.grid()
