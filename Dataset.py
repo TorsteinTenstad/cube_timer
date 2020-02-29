@@ -36,6 +36,7 @@ class Dataset:
             self.set_session_status(row['Date'], row['Time of day'], row['Scramble'] == 'True')
         else:
             for session_name, session in self.active_sessions.items():
+                row['Date'] = pd.to_datetime(row['Date'], format="%d/%m/%Y")
                 session.add_data_point(row.to_frame().transpose())
 
     def add_data_point(self, time_s, scramble, penalty):
@@ -54,8 +55,8 @@ class Dataset:
         table = []
         for session_name, session in self.sessions[type].items():
             setattr(self, session_name, session)
-            start_date = '-' if session.df.empty else session.df.iat[0, 2]
-            end_date = '-' if session_name in list(self.active_sessions.keys()) else session.df.iat[-1, 2]
+            start_date = '-' if session.df.empty else session.df.iat[0, 2].strftime('%m/%d/%Y')
+            end_date = '-' if session_name in list(self.active_sessions.keys()) else session.df.iat[-1, 2].strftime('%m/%d/%Y')
             table.append([session_name, str(len(session.df)), start_date, end_date])
         print(pd.DataFrame(table, columns=['Name', 'Solves', 'Start date', 'End date']).to_string(index=False))
 
