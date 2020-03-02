@@ -20,7 +20,7 @@ class Session:
         self.df = self.df.append(data_point)
 
     def print(self):
-        print(self.df.to_string())
+        print(self.df.to_string(formatters={'Date': lambda x: x.strftime('%d/%m/%Y')}))
 
     def hist(self, bin_width=1, show_middle_80=True):
         times = self.df.iloc[:, 0].to_numpy(dtype=np.dtype(np.int64))
