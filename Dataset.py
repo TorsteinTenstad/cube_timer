@@ -42,6 +42,7 @@ class Dataset:
     def add_data_point(self, time_s, scramble, penalty):
         new_df = self.append_line_to_data_file(int(time_s * 1000), datetime.now().strftime(
             "%H:%M:%S"), date.today().strftime("%d/%m/%Y"), scramble, penalty)
+        new_df['Date'] = pd.to_datetime(new_df['Date'], format="%d/%m/%Y")
         self.df = self.df.append(new_df)
         for session_name, session in self.active_sessions.items():
             session.add_data_point(new_df)
