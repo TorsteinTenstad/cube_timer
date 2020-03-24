@@ -19,6 +19,7 @@ class Timer:
         self.add_2 = False
         self.dnf = False
         self.scramble = ''
+        self.dnf_time = 60
 
     def register_time(self):
         if self.recorded_time > 0:
@@ -26,7 +27,8 @@ class Timer:
             time_to_send = self.recorded_time
             if self.dnf:
                 penalty = 'DNF'
-                time_to_send = 60
+                if self.dnf_time > 0:
+                    time_to_send = self.dnf_time
             elif self.add_2:
                 penalty = '+2'
                 time_to_send += 2

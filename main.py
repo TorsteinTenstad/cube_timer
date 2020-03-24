@@ -1,7 +1,8 @@
 from Dataset import Dataset
 from Scrambler import Scrambler
 from Timer import Timer
-import pandas as pd
+from os import listdir
+from os.path import isfile, join
 from time_data_formatter import time_data_formatter
 
 
@@ -22,7 +23,11 @@ def set_active_dataset(dataset):
 
 
 dataset_folder = 'datasets/'
-data = '3x3.txt'
+files = [f for f in listdir(dataset_folder) if isfile(join(dataset_folder, f))]
+print('Select dataset. Available datasets:')
+for file in files:
+    print(file[:len(file)-4])
+data = input() + '.txt'
 
 scrambler = Scrambler(20)
 timer = Timer(scrambler.generate_scramble)
