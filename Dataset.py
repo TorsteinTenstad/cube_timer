@@ -77,6 +77,9 @@ class Dataset:
             return new_session
 
     def log(self, session_name, new_status='start', counting_towards_pbs=True):
+        self.log_session_action(session_name, new_status, counting_towards_pbs)
+
+    def log_session_action(self, session_name, new_status='start', counting_towards_pbs=True):
         if self.set_session_status(session_name, new_status, counting_towards_pbs):
             counting_towards_pbs = counting_towards_pbs if new_status == 'start' else ''
             self.append_line_to_data_file('---Session', new_status, session_name, counting_towards_pbs, '')
