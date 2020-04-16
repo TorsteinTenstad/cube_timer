@@ -57,7 +57,7 @@ class Dataset:
         for session_name, session in self.sessions[type].items():
             setattr(self, session_name, session)
             start_date = '-' if session.df.empty else session.df.iat[0, 2].strftime('%d/%m/%Y')
-            end_date = '-' if session_name in list(self.active_sessions.keys()) else session.df.iat[-1, 2].strftime('%m/%d/%Y')
+            end_date = '-' if session_name in list(self.active_sessions.keys()) else session.df.iat[-1, 2].strftime('%d/%m/%Y')
             table.append([session_name, str(len(session.df)), start_date, end_date])
         print(pd.DataFrame(table, columns=['Name', 'Solves', 'Start date', 'End date']).to_string(index=False))
 
@@ -76,7 +76,7 @@ class Dataset:
             self.active_sessions.update({session_name: new_session})
             return new_session
 
-    def log_session_action(self, session_name, new_status='start', counting_towards_pbs=True):
+    def log(self, session_name, new_status='start', counting_towards_pbs=True):
         if self.set_session_status(session_name, new_status, counting_towards_pbs):
             counting_towards_pbs = counting_towards_pbs if new_status == 'start' else ''
             self.append_line_to_data_file('---Session', new_status, session_name, counting_towards_pbs, '')
