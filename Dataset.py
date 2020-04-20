@@ -149,7 +149,7 @@ class Dataset:
             id_string = '' if np.isnan(df.iat[0, 0]) else '\t(' + str(df.index[0]) + ')'
             print('Best ' + key[0].lower() + key[1:] + ':' + measures_of_interest[key][3] + str(df.iat[0, 0] / 1000) + id_string)
 
-    def plot_pbs(self):
+    def plot_pbs(self, force_all_labels=True):
         pbs = self.summaries()
         if list(pbs.values())[0].empty:
             print('Dataset does not include any sessions that count towards PBs')
@@ -175,7 +175,8 @@ class Dataset:
         fig.set_size_inches(8, 5)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%y"))
         fig.set_dpi(300)
-        plt.yticks(np.arange(1 + ceil((max_time - min_time) / 1000)) + int(min_time / 1000))
+        if force_all_labels:
+            plt.yticks(np.arange(1 + ceil((max_time - min_time) / 1000)) + int(min_time / 1000))
         plt.ylabel('Seconds')
         plt.legend(loc='best')
         plt.title('PBs')

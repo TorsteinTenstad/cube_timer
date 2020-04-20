@@ -15,6 +15,8 @@ def new_dataset(filename, print_message=True):
         print('This is now the active dataset')
     set_active_dataset(dataset)
     return dataset
+
+
 def set_active_dataset(dataset):
     timer.send_time_func = dataset.add_data_point
     timer.call_on_finish = dataset.print_number_of_solves
