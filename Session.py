@@ -96,6 +96,7 @@ class Session:
             best_average = self.get_best_average(value[0], value[1])
             id_string = '' if np.isnan(best_average[0]) else '\t(' + str(best_average.name) + ')'
             print('Best ' + key[0].lower() + key[1:] + ':' + value[3] + str(best_average[0] / 1000) + id_string)
+        print('Average:\t\t' + str(self.compute_average() / 1000))
         print('Total mean:\t\t' + str(self.compute_sample_mean() / 1000))
         print('Standard deviation:\t' + str(int(np.sqrt(self.compute_sample_variance())) / 1000))
         print('Confidence interval:\t' + str(self.compute_confidence_interval_global_mean() / 1000))
