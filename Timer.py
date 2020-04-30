@@ -13,13 +13,14 @@ class Timer:
         self.dnf_key = dnf_key
         self.min_hold_time = min_hold_time
         self.call_on_finish = call_on_finish
+        self.dnf_time = 60
+        self.display_time = True
 
         self.state = 0
         self.recorded_time = -1
         self.add_2 = False
         self.dnf = False
         self.scramble = ''
-        self.dnf_time = 60
 
     def register_time(self):
         if self.recorded_time > 0:
@@ -75,7 +76,8 @@ class Timer:
             if self.state == 3:  # waiting for, and registering finish
                 if keyboard.is_pressed(self.trigger_key):
                     self.recorded_time = time.time() - start_time
-                    print('Time: ', self.recorded_time)
+                    if self.display_time:
+                        print('Time: ', self.recorded_time)
                     self.call_on_finish()
                     self.scramble = new_scramble
                     new_scramble = self.scramble_func()

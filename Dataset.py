@@ -168,11 +168,11 @@ class Dataset:
             min_time = min_time if (min_time < min(times) or np.isnan(min(times))) else min(times)
             max_time = max_time if (max_time > max(times) or np.isnan(max(times))) else max(times)
             dates = value.iloc[:, 2].to_list()
-            ax.plot(dates, times / 1000, color=measures_of_interest[key][2], marker='o')
+            ax.plot(dates, times / 1000, color=measures_of_interest[key][2], marker='o', markersize=3)
             for i in range(1, times.size):
                 times[i] = times[i] if not np.isnan(times[i]) else times[i - 1]
             ax.plot(dates, times / 1000, color=measures_of_interest[key][2], linestyle='-', label=key)
-        fig.set_size_inches(8, 5)
+        fig.set_size_inches(8, 4)
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%y"))
         fig.set_dpi(300)
         if force_all_labels:

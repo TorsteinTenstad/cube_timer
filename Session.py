@@ -101,7 +101,7 @@ class Session:
         print('Standard deviation:\t' + str(int(np.sqrt(self.compute_sample_variance())) / 1000))
         print('Confidence interval:\t' + str(self.compute_confidence_interval_global_mean() / 1000))
 
-    def trend(self, sample_len=1, discard_amount=1):
+    def trend(self, sample_len=1, discard_amount=0):
         if len(self.df) < 2:
             print('Can\'t show trend: Too few datapoints')
             return
@@ -116,7 +116,8 @@ class Session:
         plt.plot(x, y / 1000, 'bo', x, (slope * x + intercept) / 1000, 'r')
         plt.ylabel('Seconds')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        title = 'Times' if sample_len == 1 else 'Averages of ' + str(sample_len)
+        average_info = 'Averages of ' + str(sample_len) + ' (' + str(sample_len-2*discard_amount) + ' of ' + str(sample_len) + ')' if discard_amount != 0 else 'Means of ' + str(sample_len)
+        title = 'Times' if sample_len == 1 else average_info
         plt.title(title + ', session: ' + self.name)
         plt.grid()
         plt.show()
